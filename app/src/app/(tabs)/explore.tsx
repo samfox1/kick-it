@@ -64,7 +64,7 @@ function DeckCard({ spot, top, onOpen }: { spot: Spot; top: boolean; onOpen?: ()
             </Text>
           </View>
           <View style={styles.cardBadges}>
-            {topEndorsed(spot.id, spot.characteristicIds, 4).map((id) => (
+            {topEndorsed(spot.vouchCounts ?? {}, spot.characteristicIds, 4).map((id) => (
               <CategoryBadge key={id} id={id} />
             ))}
           </View>
