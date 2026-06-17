@@ -1,4 +1,5 @@
 import type { Hang } from '../../domain/models';
+import { unwrap } from '../../test-utils/result';
 import { MockHangRepository } from '../MockHangRepository';
 
 const mk = (id: string, spotId: string): Hang => ({
@@ -21,11 +22,11 @@ describe('MockHangRepository', () => {
       mk('h2', 'basement'),
       mk('h3', 'pontoon'),
     ]);
-    expect((await repo.listForSpot('pontoon')).map((h) => h.id)).toEqual(['h1', 'h3']);
+    expect(unwrap(await repo.listForSpot('pontoon')).items.map((h) => h.id)).toEqual(['h1', 'h3']);
   });
 
   it('returns an empty list for a spot with no hangs', async () => {
     const repo = new MockHangRepository([mk('h1', 'pontoon')]);
-    expect(await repo.listForSpot('rooftop')).toEqual([]);
+    expect(unwrap(await repo.listForSpot('rooftop')).items).toEqual([]);
   });
 });

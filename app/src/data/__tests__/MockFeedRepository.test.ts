@@ -1,4 +1,5 @@
 import type { FeedItem } from '../../domain/models';
+import { unwrap } from '../../test-utils/result';
 import { MockFeedRepository } from '../MockFeedRepository';
 
 const item: FeedItem = {
@@ -18,6 +19,6 @@ const item: FeedItem = {
 describe('MockFeedRepository', () => {
   it('lists feed items in the order given', async () => {
     const repo = new MockFeedRepository([item, { ...item, id: 'f2' }]);
-    expect((await repo.listFeed()).map((i) => i.id)).toEqual(['f1', 'f2']);
+    expect(unwrap(await repo.listFeed()).items.map((i) => i.id)).toEqual(['f1', 'f2']);
   });
 });

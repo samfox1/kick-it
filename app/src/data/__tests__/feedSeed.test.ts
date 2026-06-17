@@ -1,4 +1,5 @@
 import { getCharacteristic } from '../../domain/characteristics';
+import { unwrap } from '../../test-utils/result';
 import { FEED, createDefaultFeedRepository } from '../mock/feedSeed';
 
 describe('feed seed integrity', () => {
@@ -19,6 +20,6 @@ describe('feed seed integrity', () => {
 
   it('exposes a default repository over the seed', async () => {
     const repo = createDefaultFeedRepository();
-    expect((await repo.listFeed()).length).toBe(FEED.length);
+    expect(unwrap(await repo.listFeed()).items.length).toBe(FEED.length);
   });
 });
