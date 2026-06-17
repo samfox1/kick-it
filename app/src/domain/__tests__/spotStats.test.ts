@@ -1,4 +1,4 @@
-import { hangCountForSpot, saveCountForSpot } from '../spotStats';
+import { hangCountForSpot } from '../spotStats';
 import type { Hang } from '../models';
 
 const hang = (id: string, spotId: string): Hang => ({
@@ -19,15 +19,5 @@ describe('hangCountForSpot', () => {
     const hangs = [hang('h1', 'a'), hang('h2', 'b'), hang('h3', 'a')];
     expect(hangCountForSpot(hangs, 'a')).toBe(2);
     expect(hangCountForSpot(hangs, 'z')).toBe(0);
-  });
-});
-
-describe('saveCountForSpot', () => {
-  it('is deterministic and stable for a spot', () => {
-    expect(saveCountForSpot('rooftop')).toBe(saveCountForSpot('rooftop'));
-  });
-
-  it('is a positive number', () => {
-    expect(saveCountForSpot('rooftop')).toBeGreaterThan(0);
   });
 });

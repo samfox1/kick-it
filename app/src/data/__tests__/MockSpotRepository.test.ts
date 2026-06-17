@@ -8,6 +8,16 @@ describe('MockSpotRepository', () => {
     mine: [makeSpot({ id: 'm1' })],
   });
 
+  it('attaches a vouch count for each of a spot’s characteristics', async () => {
+    const withChars = new MockSpotRepository({
+      local: [makeSpot({ id: 'c1', characteristicIds: ['aux', 'free'] })],
+      mine: [],
+    });
+    const spot = unwrap(await withChars.listLocal()).items[0];
+    expect(Object.keys(spot.vouchCounts ?? {}).sort()).toEqual(['aux', 'free']);
+    expect(unwrap(await withChars.getById('c1'))?.vouchCounts).toBeDefined();
+  });
+
   it('lists local spots', async () => {
     expect(unwrap(await repo.listLocal()).items.map((s) => s.id)).toEqual(['l1', 'l2']);
   });

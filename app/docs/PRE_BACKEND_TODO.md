@@ -18,10 +18,12 @@ store tests) are already done. What remains is below.
 - ~~**No pagination.**~~ ✅ Done (same branch). List methods take `PageParams` and
   return `Page<T>` (`src/data/page.ts`), with a `paginate` mock helper. Stores read
   `.items`; a real backend can page without signature changes.
-- **Mock counts live in the domain layer, sync.** `vouchCount` (`src/domain/vouch.ts`)
-  and `saveCountForSpot` (`src/domain/spotStats.ts`) are hash fakes called
-  synchronously. When they become network reads they break every caller. Move them
-  behind the repo seam now, backed by the current hash.
+- ~~**Mock counts live in the domain layer, sync.**~~ ✅ Done (branch
+  `feat/stats-behind-repo`). The deterministic generators moved to
+  `src/data/mock/stats.ts`; the spot repo attaches `vouchCounts` to each `Spot`
+  (as a backend would in the payload), so explore/spot-detail read data instead of
+  calling sync functions in render. `topEndorsed` is now pure over the counts;
+  `hangCountForSpot` (a real count over a list) stays in domain.
 
 ## 2. Authorization is client-side (security)
 

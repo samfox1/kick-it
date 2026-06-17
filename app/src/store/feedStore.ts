@@ -3,10 +3,11 @@ import { create } from 'zustand';
 import { createDefaultFeedRepository } from '@/data/mock/feedSeed';
 import { HANGS } from '@/data/mock/hangSeed';
 import { crewFriendIds } from '@/data/mock/profile';
+import { mockSaveCount } from '@/data/mock/stats';
 import type { FeedRepository } from '@/data/FeedRepository';
 import { visibleFeed } from '@/domain/feedView';
 import type { FeedItem } from '@/domain/models';
-import { hangCountForSpot, saveCountForSpot } from '@/domain/spotStats';
+import { hangCountForSpot } from '@/domain/spotStats';
 import { useCrewStore } from '@/store/crewStore';
 
 const repo: FeedRepository = createDefaultFeedRepository();
@@ -18,7 +19,7 @@ function withStats(items: FeedItem[]): FeedItem[] {
       ? {
           ...item,
           hangs: hangCountForSpot(HANGS, item.spotId),
-          saved: saveCountForSpot(item.spotId),
+          saved: mockSaveCount(item.spotId),
         }
       : item,
   );

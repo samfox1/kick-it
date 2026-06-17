@@ -1,20 +1,14 @@
 /**
- * Mock endorsement count for a spot's characteristic. Deterministic and stable
- * (so the UI doesn't flicker), in the 3–18 range. Replaced by real counts when
- * the backend lands.
+ * The `n` characteristics with the highest endorsement counts, highest first.
+ * Pure over the spot's vouch counts (attached by the repository) — no knowledge
+ * of where the counts come from.
  */
-export function vouchCount(spotId: string, characteristicId: string): number {
-  const key = `${spotId}:${characteristicId}`;
-  let h = 0;
-  for (let i = 0; i < key.length; i++) {
-    h = (h * 31 + key.charCodeAt(i)) >>> 0;
-  }
-  return 3 + (h % 16);
-}
-
-/** The `n` most-endorsed characteristics for a spot, highest vouch count first. */
-export function topEndorsed(spotId: string, characteristicIds: string[], n = 4): string[] {
+export function topEndorsed(
+  vouchCounts: Record<string, number>,
+  characteristicIds: string[],
+  n = 4,
+): string[] {
   return [...characteristicIds]
-    .sort((a, b) => vouchCount(spotId, b) - vouchCount(spotId, a))
+    .sort((a, b) => (vouchCounts[b] ?? 0) - (vouchCounts[a] ?? 0))
     .slice(0, n);
 }

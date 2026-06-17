@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CURRENT_USER } from '@/data/mock/profile';
 import { spotGallery } from '@/domain/models';
-import { vouchCount } from '@/domain/vouch';
 import { haptics } from '@/lib/haptics';
 import { useHangDelete } from '@/lib/useHangDelete';
 import { useHangsStore } from '@/store/hangsStore';
@@ -174,7 +173,7 @@ export default function SpotDetailScreen() {
                 <CategoryBadge
                   key={cid}
                   id={cid}
-                  count={vouchCount(spot.id, cid) + (on ? 1 : 0)}
+                  count={(spot.vouchCounts?.[cid] ?? 0) + (on ? 1 : 0)}
                   endorsed={on}
                   onPress={() => toggle(cid)}
                 />

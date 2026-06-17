@@ -31,6 +31,9 @@ export interface Spot {
   images?: string[];
   /** Characteristic ids the crew has vouched for on this spot. */
   characteristicIds: string[];
+  /** Community endorsement count per characteristic id. Attached by the repository
+   *  (a backend returns it in the payload); absent on locally-built spots. */
+  vouchCounts?: Record<string, number>;
   description?: string;
 }
 
