@@ -71,11 +71,12 @@ store tests) are already done. What remains is below.
 
 ## 5. Reactions don't persist (becomes a silent no-op with a backend)
 
-- Hang reactions live in `HangCard` local `useState`, so they vanish on unmount and
-  the same hang shows different state on the profile vs spot screen. Heart count math
-  is also ambiguous (`hang.likes + (on ? 1 : 0)` double-counts if the user is already
-  in `likes`). Lift reaction state into the hangs store/model keyed by hang id, and
-  persist via the repo, before reactions are expected to save. `src/ui/HangCard.tsx`.
+- ~~Hang reactions live in `HangCard` local `useState`, so they vanish on unmount.~~
+  ✅ Done (branch `mock-dev`). Reaction state lifted into `hangsStore`
+  (`reactions[hangId][key]`, `toggleReaction`), keyed by hang id, so it survives
+  unmount and is shared across the profile and spot ledger; cleared on delete.
+  _Still open:_ heart count math (`hang.likes + (on ? 1 : 0)`) can double-count the
+  current user — resolve when the backend tracks who reacted.
 
 ## 6. Verify (not yet confirmed)
 

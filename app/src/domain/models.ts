@@ -42,6 +42,9 @@ export function spotGallery(spot: Pick<Spot, 'image' | 'images'>): string[] {
   return spot.images && spot.images.length > 0 ? spot.images : [spot.image];
 }
 
+/** A reaction a crew member can leave on a hang. */
+export type ReactionKey = 'heart' | 'fire' | 'haha';
+
 /** A single logged hangout at a spot (builds a spot's Hang Ledger). */
 export interface Hang {
   id: string;

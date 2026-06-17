@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 
 import { makeHang } from '@/test-utils/factories';
+import { useHangsStore } from '@/store/hangsStore';
 import { HangCard } from '../HangCard';
 
 jest.mock('expo-image', () => ({ Image: 'Image' }));
@@ -13,6 +14,8 @@ function reactionCount(label: string): number {
 }
 
 describe('HangCard reactions', () => {
+  beforeEach(() => useHangsStore.setState({ reactions: {} }));
+
   it('shows the heart count from hang.likes and toggles it by one', () => {
     render(<HangCard hang={makeHang({ likes: 3 })} />);
     expect(reactionCount('React heart')).toBe(3);
@@ -37,6 +40,17 @@ describe('HangCard reactions', () => {
     unmount();
     render(<HangCard hang={makeHang({ id: 'stable-id' })} />);
     expect(reactionCount('React haha')).toBe(first);
+  });
+
+  it('persists a reaction across unmount (state lives in the store)', () => {
+    const hang = makeHang({ id: 'persist-me', likes: 2 });
+    const { unmount } = render(<HangCard hang={hang} />);
+    fireEvent.press(screen.getByLabelText('React heart'));
+    expect(reactionCount('React heart')).toBe(3);
+    unmount();
+
+    render(<HangCard hang={hang} />);
+    expect(reactionCount('React heart')).toBe(3); // still on after remount
   });
 
   it('shows an @spot link and fires onPressSpot when tapped', () => {

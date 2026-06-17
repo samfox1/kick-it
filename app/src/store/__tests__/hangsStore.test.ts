@@ -16,7 +16,7 @@ const hang = (id: string, over: Partial<Hang> = {}): Hang => ({
 });
 
 beforeEach(() => {
-  useHangsStore.setState({ hangs: [hang('a'), hang('b', { spotId: 'rooftop' })] });
+  useHangsStore.setState({ hangs: [hang('a'), hang('b', { spotId: 'rooftop' })], reactions: {} });
 });
 
 describe('hangsStore', () => {
@@ -51,5 +51,27 @@ describe('hangsStore', () => {
     useHangsStore.getState().updateHang('a', {});
     const a = useHangsStore.getState().hangs.find((h) => h.id === 'a');
     expect(a).toEqual(expect.objectContaining({ id: 'a', title: 'Title', note: 'note' }));
+  });
+});
+
+describe('hangsStore reactions', () => {
+  it('toggleReaction flips a reaction on and off', () => {
+    useHangsStore.getState().toggleReaction('a', 'fire');
+    expect(useHangsStore.getState().reactions.a?.fire).toBe(true);
+    useHangsStore.getState().toggleReaction('a', 'fire');
+    expect(useHangsStore.getState().reactions.a?.fire).toBe(false);
+  });
+
+  it('tracks reactions per hang and per key independently', () => {
+    useHangsStore.getState().toggleReaction('a', 'heart');
+    useHangsStore.getState().toggleReaction('b', 'haha');
+    expect(useHangsStore.getState().reactions.a).toEqual({ heart: true });
+    expect(useHangsStore.getState().reactions.b).toEqual({ haha: true });
+  });
+
+  it('clears a hang’s reactions when it is deleted', () => {
+    useHangsStore.getState().toggleReaction('a', 'heart');
+    useHangsStore.getState().deleteHang('a');
+    expect(useHangsStore.getState().reactions.a).toBeUndefined();
   });
 });

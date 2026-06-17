@@ -1,15 +1,13 @@
 import { Image } from 'expo-image';
 import { Flame, Heart, Laugh, Pencil, Trash2 } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import type { Hang } from '@/domain/models';
+import type { Hang, ReactionKey } from '@/domain/models';
 import { haptics } from '@/lib/haptics';
+import { useHangsStore } from '@/store/hangsStore';
 import { colors, font, inkBorder, pressedStyle, radii } from '@/theme/tokens';
 import { Avatar, memberColor } from '@/ui/Avatar';
-
-type ReactionKey = 'heart' | 'fire' | 'haha';
 
 const REACTIONS: { key: ReactionKey; Icon: LucideIcon; color: string; fillWhenOn: boolean }[] = [
   { key: 'heart', Icon: Heart, color: colors.like, fillWhenOn: true },
@@ -44,17 +42,14 @@ export function HangCard({
   onEdit?: () => void;
   onDelete?: () => void;
 }) {
-  const [active, setActive] = useState<Record<ReactionKey, boolean>>({
-    heart: false,
-    fire: false,
-    haha: false,
-  });
+  const active = useHangsStore((s) => s.reactions[hang.id]);
+  const toggleReaction = useHangsStore((s) => s.toggleReaction);
+  const isOn = (key: ReactionKey) => active?.[key] ?? false;
 
-  const toggle = (key: ReactionKey) =>
-    setActive((prev) => {
-      if (!prev[key]) haptics.bump();
-      return { ...prev, [key]: !prev[key] };
-    });
+  const toggle = (key: ReactionKey) => {
+    if (!isOn(key)) haptics.bump();
+    toggleReaction(hang.id, key);
+  };
 
   return (
     <View style={styles.card}>
@@ -126,7 +121,7 @@ export function HangCard({
         <View style={{ flex: 1 }} />
         <View style={styles.reactions}>
           {REACTIONS.map(({ key, Icon, color, fillWhenOn }) => {
-            const on = active[key];
+            const on = isOn(key);
             const base = key === 'heart' ? hang.likes : baseCount(hang.id, key);
             const count = base + (on ? 1 : 0);
             return (
