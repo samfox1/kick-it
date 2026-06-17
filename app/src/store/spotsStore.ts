@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { createDefaultSpotRepository } from '@/data/mock/seed';
 import type { SpotRepository } from '@/data/SpotRepository';
 import type { Preferences, Spot } from '@/domain/models';
-import { clampScore } from '@/domain/score';
+import { applyRankScores, sortByScoreDesc } from '@/domain/ranking';
 
 /** The single seam to data. Swap this for a backed repository later — store/screens unchanged. */
 const repo: SpotRepository = createDefaultSpotRepository();
@@ -28,10 +28,13 @@ interface SpotsState {
   unsaveSpot: (id: string) => void;
   isSaved: (id: string) => boolean;
   /**
-   * Add or update a spot in your ranked list ("mine") with a derived score.
-   * Ranking a spot promotes it out of "saved" — once it's ranked it lives in My spots.
+   * Place a spot at rank `index` in your ranked list ("mine"); 0 = top. Order is
+   * the source of truth — every spot's score is re-derived from its position.
+   * Ranking a spot promotes it out of "saved".
    */
-  rankSpot: (spot: Spot, score: number) => void;
+  rankSpot: (spot: Spot, index: number) => void;
+  /** Reorder the ranked list to a new order (e.g. after drag) and re-derive scores. */
+  reorderMine: (ordered: Spot[]) => void;
 }
 
 export const useSpotsStore = create<SpotsState>((set, get) => ({
@@ -53,7 +56,10 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
       set({ loaded: true, error: mineRes.error.message });
       return;
     }
-    set({ local: localRes.value.items, mine: mineRes.value.items, loaded: true, error: null });
+    // Establish rank order from the seed's scores, then derive clean band scores so
+    // the order-as-truth model is consistent from the first render.
+    const mine = applyRankScores(sortByScoreDesc(mineRes.value.items));
+    set({ local: localRes.value.items, mine, loaded: true, error: null });
   },
 
   setCollection: (collection) => set({ collection }),
@@ -81,9 +87,13 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
 
   isSaved: (id) => get().saved.some((m) => m.id === id),
 
-  rankSpot: (spot, score) =>
-    set((s) => ({
-      mine: [...s.mine.filter((m) => m.id !== spot.id), { ...spot, score: clampScore(score) }],
-      saved: s.saved.filter((m) => m.id !== spot.id),
-    })),
+  rankSpot: (spot, index) =>
+    set((s) => {
+      const without = s.mine.filter((m) => m.id !== spot.id);
+      const clamped = Math.max(0, Math.min(without.length, index));
+      const next = [...without.slice(0, clamped), spot, ...without.slice(clamped)];
+      return { mine: applyRankScores(next), saved: s.saved.filter((m) => m.id !== spot.id) };
+    }),
+
+  reorderMine: (ordered) => set(() => ({ mine: applyRankScores(ordered) })),
 }));

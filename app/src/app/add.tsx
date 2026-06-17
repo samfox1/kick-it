@@ -20,7 +20,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { findDuplicateCandidates } from '@/domain/dedupe';
 import { exploreCatalog } from '@/domain/exploreView';
 import type { AccessLevel } from '@/domain/models';
-import { insertIndex, nextComparisonIndex, scoreForInsert } from '@/domain/rankInsert';
+import { insertIndex, nextComparisonIndex } from '@/domain/rankInsert';
+import { scoreFromRank } from '@/domain/ranking';
 import { visibleMySpots } from '@/domain/spotsView';
 import { useSpotsStore } from '@/store/spotsStore';
 import { colors, font, hardShadow, inkBorder, radii } from '@/theme/tokens';
@@ -105,10 +106,7 @@ export default function AddScreen() {
   const compareIdx = nextComparisonIndex(ranked.length, answers);
   const rankingDone = step === 5 && compareIdx === -1;
   const finalIndex = insertIndex(ranked.length, answers);
-  const finalScore = scoreForInsert(
-    ranked.map((s) => s.score),
-    finalIndex,
-  );
+  const finalScore = scoreFromRank(finalIndex, ranked.length + 1);
 
   const addFromCamera = async () => {
     const perm = await ImagePicker.requestCameraPermissionsAsync();

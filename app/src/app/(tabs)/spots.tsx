@@ -5,7 +5,6 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { scoreForReorder } from '@/domain/rankInsert';
 import type { Spot } from '@/domain/models';
 import { visibleLocalSpots, visibleMySpots } from '@/domain/spotsView';
 import { haptics } from '@/lib/haptics';
@@ -31,7 +30,7 @@ export default function SpotsScreen() {
     setCollection,
     setMaxDistance,
     toggleNonNegotiable,
-    rankSpot,
+    reorderMine,
   } = useSpotsStore();
   const router = useRouter();
   const [prefsOpen, setPrefsOpen] = useState(false);
@@ -149,13 +148,7 @@ export default function SpotsScreen() {
           onDragEnd={({ data, from, to }) => {
             if (from === to) return;
             haptics.bump();
-            rankSpot(
-              data[to],
-              scoreForReorder(
-                data.map((s) => s.score),
-                to,
-              ),
-            );
+            reorderMine(data);
           }}
           renderItem={({ item, drag, isActive, getIndex }) => (
             <ScaleDecorator>
