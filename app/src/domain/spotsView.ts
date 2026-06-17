@@ -2,9 +2,17 @@ import type { Preferences, Spot } from './models';
 import { filterSpots } from './preferences';
 import { sortByScoreDesc } from './ranking';
 
-/** Local spots a user should see: filtered by their preferences, ranked high→low. */
-export function visibleLocalSpots(spots: Spot[], prefs: Preferences): Spot[] {
-  return sortByScoreDesc(filterSpots(spots, prefs));
+/**
+ * Local spots to discover: filtered by preferences and ranked high→low, excluding any
+ * already in your collection (`ownedIds` = saved + ranked) so every one is savable.
+ */
+export function visibleLocalSpots(
+  spots: Spot[],
+  prefs: Preferences,
+  ownedIds: string[] = [],
+): Spot[] {
+  const owned = new Set(ownedIds);
+  return sortByScoreDesc(filterSpots(spots, prefs).filter((s) => !owned.has(s.id)));
 }
 
 /**

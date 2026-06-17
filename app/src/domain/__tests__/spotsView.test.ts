@@ -12,6 +12,15 @@ describe('visibleLocalSpots', () => {
     const result = visibleLocalSpots(spots, { maxDistanceMi: 5, nonNegotiables: ['aux'] });
     expect(result.map((s) => s.id)).toEqual(['near-hi', 'near-lo']);
   });
+
+  it('excludes spots already in your collection (owned)', () => {
+    const spots = [
+      makeSpot({ id: 'a', distanceMi: 1, characteristicIds: [] }),
+      makeSpot({ id: 'b', distanceMi: 1, characteristicIds: [] }),
+    ];
+    const result = visibleLocalSpots(spots, { maxDistanceMi: 5, nonNegotiables: [] }, ['a']);
+    expect(result.map((s) => s.id)).toEqual(['b']);
+  });
 });
 
 describe('visibleMySpots', () => {
