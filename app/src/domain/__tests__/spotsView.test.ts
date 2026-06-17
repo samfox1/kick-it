@@ -15,8 +15,8 @@ describe('visibleLocalSpots', () => {
 });
 
 describe('visibleMySpots', () => {
-  it('orders by score descending', () => {
+  it('returns spots in their existing rank order (array order is the ranking)', () => {
     const spots = [makeSpot({ id: 'a', score: 7 }), makeSpot({ id: 'b', score: 9 })];
-    expect(visibleMySpots(spots).map((s) => s.id)).toEqual(['b', 'a']);
+    expect(visibleMySpots(spots).map((s) => s.id)).toEqual(['a', 'b']);
   });
 });

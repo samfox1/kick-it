@@ -78,21 +78,14 @@ store tests) are already done. What remains is below.
   _Still open:_ heart count math (`hang.likes + (on ? 1 : 0)`) can double-count the
   current user — resolve when the backend tracks who reacted.
 
-## 6. Drag-reorder score drift — CONFIRMED (edge case)
+## 6. Drag-reorder score drift — ✅ FIXED
 
-Confirmed and reproduced in `src/domain/__tests__/reorderDrift.test.ts`.
-
-- **Single drops are correct** when scores are spaced > 0.1 apart.
-- **Drift inside a tie cluster:** `scoreForInsert` rounds the midpoint to 1 decimal,
-  so neighbors 0.1 apart tie; `rankSpot` appends the moved spot and `sortByScoreDesc`
-  is stable, so on a tie the moved spot sinks to the bottom of the equal-score group
-  instead of landing at the drop position. Repeated reorders of close scores create
-  those clusters.
-- **Recommended fix (product decision — needs Sam):** on manual reorder, re-score the
-  whole list to be monotonic with the new order (score is the sort key, so order can
-  only stick if scores encode it). This slightly rescales displayed numbers, which is
-  why it's a product call rather than a silent change. Files: `src/app/(tabs)/spots.tsx`,
-  a new `reorderScores` in `src/domain/rankInsert.ts`.
+Resolved by inverting the model: ranking order is now the source of truth and the
+score is derived from rank position (see ADR-0003). Drag-to-reorder (`reorderMine`)
+and pairwise ranking (`rankSpot(spot, index)`) both produce an index; scores are
+re-derived via `scoreFromRank`/`applyRankScores`, so the displayed order always matches
+the ranked order — no drift, even with ties (ties in the 1-decimal readout are
+cosmetic). Covered by `spotsStore.reorderMine` + `ranking` tests.
 
 ## 7. Minor cleanups
 
