@@ -78,12 +78,21 @@ store tests) are already done. What remains is below.
   _Still open:_ heart count math (`hang.likes + (on ? 1 : 0)`) can double-count the
   current user — resolve when the backend tracks who reacted.
 
-## 6. Verify (not yet confirmed)
+## 6. Drag-reorder score drift — CONFIRMED (edge case)
 
-- **Drag-reorder score drift.** `onDragEnd` patches only the moved spot's score
-  (`spots.tsx` → `rankSpot`). Over multiple reorders, neighbor scores may collide and
-  the list could re-sort unexpectedly. Confirm `scoreForReorder` spacing or persist
-  scores for the whole reordered array. `src/app/(tabs)/spots.tsx`.
+Confirmed and reproduced in `src/domain/__tests__/reorderDrift.test.ts`.
+
+- **Single drops are correct** when scores are spaced > 0.1 apart.
+- **Drift inside a tie cluster:** `scoreForInsert` rounds the midpoint to 1 decimal,
+  so neighbors 0.1 apart tie; `rankSpot` appends the moved spot and `sortByScoreDesc`
+  is stable, so on a tie the moved spot sinks to the bottom of the equal-score group
+  instead of landing at the drop position. Repeated reorders of close scores create
+  those clusters.
+- **Recommended fix (product decision — needs Sam):** on manual reorder, re-score the
+  whole list to be monotonic with the new order (score is the sort key, so order can
+  only stick if scores encode it). This slightly rescales displayed numbers, which is
+  why it's a product call rather than a silent change. Files: `src/app/(tabs)/spots.tsx`,
+  a new `reorderScores` in `src/domain/rankInsert.ts`.
 
 ## 7. Minor cleanups
 
