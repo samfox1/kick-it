@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kick It</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter', system-ui, sans-serif; color:#111; background:#e7e8ec;
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:28px 16px; }
+
+  .phone { width:390px; height:844px; background:#fff; border-radius:46px; border:11px solid #15171c;
+    box-shadow:0 30px 60px rgba(20,22,28,.4); position:relative; overflow:hidden; }
+  .notch { position:absolute; top:0; left:50%; transform:translateX(-50%); width:148px; height:26px;
+    background:#15171c; border-bottom-left-radius:16px; border-bottom-right-radius:16px; z-index:60; }
+  .statusbar { position:absolute; top:0; left:0; right:0; height:50px; display:flex; align-items:flex-end;
+    justify-content:space-between; padding:0 26px 6px; font-size:13px; font-weight:700; z-index:50; }
+
+  .screen { position:absolute; inset:0; overflow:hidden;
+    background-image:radial-gradient(rgba(17,17,17,.05) 1px, transparent 1px); background-size:24px 24px; }
+
+  /* centered hero */
+  .hero { position:absolute; inset:0; z-index:5; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; padding:0 22px; }
+  .eyebrow { font-weight:700; font-size:17px; letter-spacing:.2px; margin-bottom:14px; }
+  .wordmark { width:232px; height:auto; display:block; filter:drop-shadow(0 5px 0 rgba(17,17,17,.06)); }
+  /* hand-drawn-feel CTA: ink outline, irregular radius, no heavy fill */
+  .cta { display:inline-flex; align-items:center; gap:8px; margin-top:26px; font-weight:800; font-size:15px;
+    text-decoration:none; color:#111; background:#fff; border:2.5px solid #111;
+    border-radius:16px 19px 14px 18px; padding:11px 19px; box-shadow:3px 3px 0 #111; }
+  .cta svg { width:16px; height:16px; }
+  .tagline { margin-top:14px; max-width:240px; font-size:12px; font-weight:600; color:#999; }
+
+  /* floating doodle objects */
+  .float { position:absolute; z-index:1; pointer-events:none;
+    filter:drop-shadow(0 8px 10px rgba(17,17,17,.10));
+    animation: drift var(--d,6s) ease-in-out infinite alternate; }
+  .float img { width:100%; height:auto; display:block; }
+  @keyframes drift {
+    from { transform: translateY(0) rotate(var(--r,0deg)); }
+    to   { transform: translateY(-16px) rotate(calc(var(--r,0deg) + 6deg)); }
+  }
+  .f-bench    { top:9%;  left:4%; width:178px; --r:-6deg; --d:7.2s; animation-delay:-2s; }
+  .f-beanbag  { top:15%; right:5%; width:138px; --r:8deg; --d:6.6s; animation-delay:-3s; }
+  .f-barstool { bottom:9%; right:7%; width:108px; --r:6deg; --d:5.4s; animation-delay:-1s; }
+  .f-couch    { bottom:6%; left:4%;  width:182px; --r:-5deg; --d:8s;  animation-delay:-1.5s; }
+</style>
+</head>
+<body>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar"><span>9:41</span><span></span></div>
+
+    <div class="screen">
+      <div class="float f-bench"><img src="img/bench.png" alt=""></div>
+      <div class="float f-barstool"><img src="img/barstool.png" alt=""></div>
+      <div class="float f-beanbag"><img src="img/beanbag.png" alt=""></div>
+      <div class="float f-couch"><img src="img/couch_image.png" alt=""></div>
+
+      <div class="hero">
+        <div class="eyebrow">For people who like to&hellip;</div>
+        <img class="wordmark" src="img/kick_it_text.png" alt="Kick It">
+        <a class="cta" href="feed.html">Open the app
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

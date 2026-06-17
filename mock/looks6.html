@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kick It — Spots, score-forward rows</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#101012; color:#ececf0; font-family:'Inter',system-ui,sans-serif;
+         min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:34px 16px 70px; }
+  .head { max-width:760px; text-align:center; margin-bottom:24px; }
+  .head h1 { font-size:24px; font-weight:800; }
+  .head p { color:#9a9aa4; margin-top:8px; font-size:14px; line-height:1.5; }
+  .head b { color:#ececf0; }
+
+  /* phone */
+  .phone { width:360px; height:740px; background:#fff; color:#111; border-radius:30px;
+           border:11px solid #2b231c; overflow:hidden; position:relative; box-shadow:0 30px 60px rgba(0,0,0,.5); }
+  .scr { position:absolute; inset:0; overflow-y:auto; padding:20px 16px 110px; }
+  .scr::-webkit-scrollbar { display:none; }
+
+  .title { font-size:30px; font-weight:800; letter-spacing:-.5px; margin-bottom:14px; }
+  .seg { display:flex; background:#f1f1ee; border:2px solid #111; border-radius:14px; padding:4px; margin-bottom:14px; }
+  .seg button { flex:1; padding:9px; border:none; background:none; font-family:inherit; font-weight:700; font-size:13.5px; color:#777; border-radius:9px; cursor:pointer; }
+  .seg button.on { background:#fff; color:#111; box-shadow:2px 2px 0 #111; border:1.5px solid #111; }
+  .subrow { display:flex; align-items:center; margin-bottom:16px; }
+  .subrow .count { font-size:13px; font-weight:700; color:#555; }
+  .vseg { margin-left:auto; display:flex; background:#f1f1ee; border:2px solid #111; border-radius:11px; padding:3px; }
+  .vseg button { border:none; background:none; padding:6px 11px; border-radius:8px; cursor:pointer; color:#888; display:grid; place-items:center; }
+  .vseg button.on { background:#fff; color:#111; box-shadow:1px 1px 0 #111; }
+  .vseg svg { width:17px; height:17px; }
+
+  /* score-forward row */
+  .row { border:2px solid #111; border-radius:18px; box-shadow:4px 4px 0 #111; background:#fff; margin-bottom:16px; overflow:hidden; cursor:pointer; }
+  .row-top { display:flex; align-items:center; gap:12px; padding:12px; }
+  .row-top img { width:58px; height:58px; border-radius:13px; border:2px solid #111; object-fit:cover; flex:none; }
+  .row-info { flex:1; min-width:0; }
+  .row-name { font-size:16px; font-weight:800; letter-spacing:-.2px; }
+  .row-meta { font-size:12px; font-weight:600; color:#888; margin-top:2px; }
+  .bubble { width:50px; height:50px; flex:none; border:2px solid #111; border-radius:50% 50% 50% 9px;
+            color:#fff; display:grid; place-items:center; font-weight:800; font-size:18px; box-shadow:2px 2px 0 #111; }
+  .chev { width:20px; flex:none; color:#bbb; display:grid; place-items:center; transition:transform .25s ease; }
+  .chev svg { width:18px; height:18px; }
+  .row.open .chev { transform:rotate(180deg); }
+
+  /* reveal-on-tap detail */
+  .detail { max-height:0; overflow:hidden; transition:max-height .3s ease; }
+  .row.open .detail { max-height:260px; }
+  .detail-in { padding:0 12px 14px; border-top:2px dashed #e3e3e3; margin:0 12px; padding-top:12px; }
+  .det-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .sticker { display:inline-flex; align-items:center; font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.4px;
+             border:2px solid #111; box-shadow:2px 2px 0 #111; padding:4px 8px; border-radius:7px; transform:rotate(-4deg); background:#fff; }
+  .cat-label { font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.6px; color:#aaa; margin:8px 0 6px; }
+  .badges { display:flex; flex-wrap:wrap; gap:6px; }
+  .badge { display:inline-flex; align-items:center; gap:5px; border:2px solid #111; border-radius:10px; box-shadow:2px 2px 0 #111;
+           font-size:11px; font-weight:700; padding:4px 8px; }
+  .badge svg { width:13px; height:13px; }
+  .out{background:#e4f7ea;color:#15803d} .vibe{background:#f1e9ff;color:#6d28d9}
+  .feat{background:#e8f0ff;color:#1d4ed8} .acc{background:#fff0e0;color:#c2620b}
+  .viewlink { margin-top:10px; font-size:12px; font-weight:800; color:#2563eb; display:inline-flex; align-items:center; gap:4px; }
+  .viewlink svg { width:14px; height:14px; }
+  .hint { text-align:center; font-size:11px; color:#aaa; font-weight:600; margin-top:2px; }
+
+  /* nav */
+  .nav { position:absolute; bottom:18px; left:50%; transform:translateX(-50%); width:312px; height:60px;
+         background:#fff; border:2px solid #111; border-radius:30px; box-shadow:4px 4px 0 #111;
+         display:flex; align-items:center; justify-content:space-around; padding:0 14px; }
+  .nav svg { width:23px; height:23px; color:#999; }
+  .nav .act { color:#2563eb; }
+  .navplus { width:46px; height:46px; border-radius:50%; background:#2563eb; border:2px solid #111; box-shadow:2px 2px 0 #111; display:grid; place-items:center; }
+  .navplus svg { width:24px; height:24px; color:#fff; }
+</style>
+</head>
+<body>
+  <div class="head">
+    <h1>Spots — score-forward rows</h1>
+    <p>The ranking rows now lead with the <b>colored score badge</b>. The access tag and characteristic badges stay hidden until you <b>tap a row</b> to expand it. Tap any row to try it.</p>
+  </div>
+
+  <div class="phone">
+    <div class="scr">
+      <div class="title">Spots</div>
+      <div class="seg">
+        <button class="on">Local spots</button>
+        <button>My spots</button>
+      </div>
+      <div class="subrow">
+        <span class="count">8 spots near you</span>
+        <div class="vseg">
+          <button class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg></button>
+          <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg></button>
+        </div>
+      </div>
+
+      <!-- ROW 1 (open by default to show the pattern) -->
+      <div class="row open" onclick="this.classList.toggle('open')">
+        <div class="row-top">
+          <img src="https://picsum.photos/seed/cedarbench8/200/200" alt="">
+          <div class="row-info">
+            <div class="row-name">Cedar Bench by the Oak</div>
+            <div class="row-meta">park · 0.4 mi</div>
+          </div>
+          <div class="bubble" style="background:hsl(94,68%,43%)">7.8</div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="detail"><div class="detail-in">
+          <div class="det-row"><span class="sticker">Open to all</span></div>
+          <div class="cat-label">What people vouch for</div>
+          <div class="badges">
+            <span class="badge out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Sunset views</span>
+            <span class="badge vibe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Quiet</span>
+            <span class="badge acc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/></svg>Free</span>
+          </div>
+          <div class="viewlink">View spot <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+        </div></div>
+      </div>
+
+      <!-- ROW 2 -->
+      <div class="row" onclick="this.classList.toggle('open')">
+        <div class="row-top">
+          <img src="https://picsum.photos/seed/tinroof2/200/200" alt="">
+          <div class="row-info">
+            <div class="row-name">The Tin Roof Patio</div>
+            <div class="row-meta">bar patio · 1.1 mi</div>
+          </div>
+          <div class="bubble" style="background:hsl(101,68%,42%)">8.4</div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="detail"><div class="detail-in">
+          <div class="det-row"><span class="sticker">Open to all</span></div>
+          <div class="cat-label">What people vouch for</div>
+          <div class="badges">
+            <span class="badge acc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Food on site</span>
+            <span class="badge feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Aux access</span>
+          </div>
+          <div class="viewlink">View spot <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+        </div></div>
+      </div>
+
+      <!-- ROW 3 -->
+      <div class="row" onclick="this.classList.toggle('open')">
+        <div class="row-top">
+          <img src="https://picsum.photos/seed/dock5/200/200" alt="">
+          <div class="row-info">
+            <div class="row-name">The Loading Dock</div>
+            <div class="row-meta">lot · 2.3 mi</div>
+          </div>
+          <div class="bubble" style="background:hsl(74,70%,45%)">6.2</div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="detail"><div class="detail-in">
+          <div class="det-row"><span class="sticker">Invite only</span></div>
+          <div class="cat-label">What people vouch for</div>
+          <div class="badges">
+            <span class="badge vibe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Loud-friendly</span>
+            <span class="badge acc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/></svg>Open late</span>
+          </div>
+          <div class="viewlink">View spot <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+        </div></div>
+      </div>
+
+      <!-- ROW 4 -->
+      <div class="row" onclick="this.classList.toggle('open')">
+        <div class="row-top">
+          <img src="https://picsum.photos/seed/riverwalk1/200/200" alt="">
+          <div class="row-info">
+            <div class="row-name">Riverwalk Steps</div>
+            <div class="row-meta">waterfront · 1.6 mi</div>
+          </div>
+          <div class="bubble" style="background:hsl(85,68%,44%)">7.1</div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="detail"><div class="detail-in">
+          <div class="det-row"><span class="sticker">Open to all</span></div>
+          <div class="cat-label">What people vouch for</div>
+          <div class="badges">
+            <span class="badge out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1C7 13 7 11 9.5 11c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1C7 19 7 17 9.5 17c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>On the water</span>
+            <span class="badge acc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/></svg>Free</span>
+          </div>
+          <div class="viewlink">View spot <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+        </div></div>
+      </div>
+
+      <div class="hint">Tap a row to see its tags &amp; badges</div>
+    </div>
+
+    <div class="nav">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/></svg>
+      <div class="navplus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg></div>
+      <svg class="act" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+  </div>
+</body>
+</html>

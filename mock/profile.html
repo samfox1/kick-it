@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kick It — Profile</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-tab="profile">
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar"><span>9:41</span><span class="right"></span></div>
+
+  <div class="screen">
+    <div class="topbar">
+      <div style="width:38px;"></div>
+      <div style="font-weight:800; font-size:18px;">Your spots</div>
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+    </div>
+
+    <div class="pad">
+      <div class="row-flex" style="margin-top:4px;">
+        <div class="av lg c1">S</div>
+        <div style="flex:1;">
+          <div style="font-size:21px; font-weight:800; letter-spacing:-.3px;">Sam Fox</div>
+          <div class="small muted" style="font-weight:600;">@samkicks · crew: The Regulars</div>
+        </div>
+        <button class="btn sm">Edit</button>
+      </div>
+
+      <div class="row-flex" style="margin-top:18px; gap:9px;">
+        <div class="card" style="flex:1; box-shadow:var(--shadow-sm); border-radius:14px; padding:13px; text-align:center;"><div style="font-size:22px; font-weight:800;">23</div><div class="tiny muted" style="font-weight:600;">spots ranked</div></div>
+        <div class="card" style="flex:1; box-shadow:var(--shadow-sm); border-radius:14px; padding:13px; text-align:center;"><div style="font-size:22px; font-weight:800;">61</div><div class="tiny muted" style="font-weight:600;">hangs logged</div></div>
+        <div class="card" style="flex:1; box-shadow:var(--shadow-sm); border-radius:14px; padding:13px; text-align:center;"><div style="font-size:22px; font-weight:800;">9</div><div class="tiny muted" style="font-weight:600;">in your crew</div></div>
+      </div>
+
+      <div class="row-flex" style="margin-top:16px;">
+        <div class="av-stack">
+          <div class="av md c2">M</div><div class="av md c3">S</div><div class="av md c4">D</div><div class="av md c5">N</div><div class="av md c6">J</div>
+          <div class="av md" style="background:#555; margin-left:-8px;">+4</div>
+        </div>
+        <span class="spacer"></span>
+        <button class="btn sm">＋ Invite</button>
+      </div>
+
+      <div class="seg" style="margin:18px 0 6px;">
+        <button class="on">Ranked</button><button>Saved</button><button>Hangs</button>
+      </div>
+
+      <!-- ranked rows (app.js sorts by score desc, opens top, renumbers) -->
+      <div class="ranklist" style="margin-top:12px;">
+      <div class="row">
+        <div class="row-top">
+          <div class="row-rank">1</div>
+          <img class="thumb" src="https://picsum.photos/seed/pontoon7/160/160" alt="">
+          <div class="row-info"><div class="row-name">Uncle Rick's Pontoon</div><div class="row-meta">on the water</div></div>
+          <div class="score md" data-score="9.6">9.6</div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="detail"><div class="detail-in">
+          <span class="sticker">Invite only</span>
+          <div class="badges" style="margin-top:11px;">
+            <span class="badge out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1C7 13 7 11 9.5 11c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1C7 19 7 17 9.5 17c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>On the water</span>
+            <span class="badge vibe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Total privacy</span>
+          </div>
+          <a href="spot.html" class="viewlink" aria-label="View spot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+        </div></div>
+      </div>
+
+      <div class="row">
+        <div class="row-top">
+          <div class="row-rank">2</div>
+          <img class="thumb" src="https://picsum.photos/seed/basement4/160/160" alt="">
+          <div class="row-info"><div class="row-name">Joey's Basement</div><div class="row-meta">basement</div></div>
+          <div class="score md" data-score="9.2">9.2</div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="detail"><div class="detail-in">
+          <span class="sticker">Friends only</span>
+          <div class="badges" style="margin-top:11px;">
+            <span class="badge feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Aux access</span>
+            <span class="badge feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>Charging</span>
+          </div>
+          <a href="spot.html" class="viewlink" aria-label="View spot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+        </div></div>
+      </div>
+
+      <div class="row">
+        <div class="row-top">
+          <div class="row-rank">3</div>
+          <img class="thumb" src="https://picsum.photos/seed/rooftop9/160/160" alt="">
+          <div class="row-info"><div class="row-name">Marcus's Rooftop</div><div class="row-meta">rooftop</div></div>
+          <div class="score md" data-score="8.9">8.9</div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="detail"><div class="detail-in">
+          <span class="sticker">Friends only</span>
+          <div class="badges" style="margin-top:11px;">
+            <span class="badge out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>City view</span>
+            <span class="badge feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>Charging</span>
+          </div>
+          <a href="spot.html" class="viewlink" aria-label="View spot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+        </div></div>
+      </div>
+
+      <div class="row">
+        <div class="row-top">
+          <div class="row-rank">4</div>
+          <img class="thumb" src="https://picsum.photos/seed/firepit3/160/160" alt="">
+          <div class="row-info"><div class="row-name">Nia's Firepit</div><div class="row-meta">backyard</div></div>
+          <div class="score md" data-score="8.7">8.7</div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="detail"><div class="detail-in">
+          <span class="sticker">Friends only</span>
+          <div class="badges" style="margin-top:11px;">
+            <span class="badge vibe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Loud-friendly</span>
+            <span class="badge acc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Big group ok</span>
+          </div>
+          <a href="spot.html" class="viewlink" aria-label="View spot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+        </div></div>
+      </div>
+
+      <div class="row">
+        <div class="row-top">
+          <div class="row-rank">5</div>
+          <img class="thumb" src="https://picsum.photos/seed/tinroof2/160/160" alt="">
+          <div class="row-info"><div class="row-name">The Tin Roof Patio</div><div class="row-meta">bar patio</div></div>
+          <div class="score md" data-score="8.4">8.4</div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="detail"><div class="detail-in">
+          <span class="sticker">Open to all</span>
+          <div class="badges" style="margin-top:11px;">
+            <span class="badge acc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Food on site</span>
+          </div>
+          <a href="spot.html" class="viewlink" aria-label="View spot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+        </div></div>
+      </div>
+
+      <div class="row">
+        <div class="row-top">
+          <div class="row-rank">6</div>
+          <img class="thumb" src="https://picsum.photos/seed/cedarbench8/160/160" alt="">
+          <div class="row-info"><div class="row-name">Cedar Bench by the Oak</div><div class="row-meta">park</div></div>
+          <div class="score md" data-score="7.8">7.8</div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="detail"><div class="detail-in">
+          <span class="sticker">Open to all</span>
+          <div class="badges" style="margin-top:11px;">
+            <span class="badge out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Sunset views</span>
+          </div>
+          <a href="spot.html" class="viewlink" aria-label="View spot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+        </div></div>
+      </div>
+
+      </div>
+      <div class="scroll-bottom"></div>
+    </div>
+  </div>
+
+  <div class="tabbar"></div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

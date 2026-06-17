@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kick It — Add a Spot</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .prog { height:9px; border:2px solid var(--ink); border-radius:6px; background:#fff; margin:0 18px 6px; overflow:hidden; }
+  .prog i { display:block; height:100%; background:var(--blue); transition:width .35s ease; }
+  .step { display:none; padding:0 18px; }
+  .step.on { display:block; animation:fade .3s ease; }
+  @keyframes fade { from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+  .lbl { font-weight:800; font-size:14px; margin:18px 0 9px; }
+  .field { width:100%; border:2px solid var(--ink); background:#fff; border-radius:13px; padding:13px; font-family:var(--font); font-size:15px; font-weight:600; }
+  textarea.field { resize:none; min-height:84px; }
+  .upl { border:2px dashed var(--ink); border-radius:var(--radius); height:150px; display:grid; place-items:center; text-align:center; color:var(--muted); font-weight:700; }
+  .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; }
+  .opt { border:2px solid var(--ink); border-radius:14px; background:#fff; padding:13px 8px; text-align:center; font-weight:700; font-size:12.5px; cursor:pointer; box-shadow:var(--shadow-sm); }
+  .opt.sel { background:var(--blue); color:#fff; }
+  .accopt { border:2px solid var(--ink); border-radius:14px; background:#fff; padding:13px; display:flex; gap:11px; align-items:center; margin-bottom:11px; cursor:pointer; box-shadow:var(--shadow-sm); }
+  .accopt.sel { outline:2px solid var(--blue); outline-offset:1px; }
+  .accopt b { font-size:14px; } .accopt .tiny { color:var(--muted); }
+  .footer { position:absolute; bottom:0; left:0; right:0; padding:14px 18px 22px; background:linear-gradient(to top,#fff 72%,transparent); }
+  .vs { display:flex; gap:12px; align-items:stretch; }
+  .vs-card { flex:1; border:2px solid var(--ink); border-radius:16px; overflow:hidden; box-shadow:var(--shadow-md); cursor:pointer; }
+  .vs-card img { width:100%; height:140px; object-fit:cover; border-bottom:2px solid var(--ink); }
+  .vs-card .cap { padding:9px 11px; } .vs-mid { display:grid; place-items:center; font-weight:800; color:var(--muted); }
+  .reveal { width:118px; height:118px; border-radius:50% 50% 50% 16px; border:2px solid var(--ink); box-shadow:var(--shadow); margin:8px auto; display:grid; place-items:center; font-weight:800; font-size:42px; color:#fff; }
+</style>
+</head>
+<body data-tab="">
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar"><span>9:41</span><span class="right"></span></div>
+
+  <div class="screen" style="padding-bottom:96px;">
+    <div class="topbar" style="padding-top:8px;">
+      <a href="feed.html" class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></a>
+      <div style="font-weight:800; font-size:18px;">Add a spot</div>
+      <div style="width:38px;"></div>
+    </div>
+
+    <div class="prog"><i id="bar" style="width:20%;"></i></div>
+    <div class="tiny muted" style="padding:0 18px 4px; font-weight:700;"><span id="stepn">Step 1</span> of 5</div>
+
+    <!-- STEP 1 -->
+    <div class="step on" id="s1">
+      <div class="lbl">Add a few photos</div>
+      <label class="upl" style="cursor:pointer;">
+        <input type="file" accept="image/*" capture="environment" hidden>
+        <div style="text-align:center; color:var(--ink);">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+          <div style="margin-top:7px;">Take a photo</div>
+        </div>
+      </label>
+      <label class="row-flex" style="justify-content:center; gap:6px; margin-top:9px; font-weight:700; font-size:13px; color:var(--blue); cursor:pointer;">
+        <input type="file" accept="image/*" hidden>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+        Or choose from your library
+      </label>
+      <div class="lbl">What's it called?</div>
+      <input class="field" value="Nia's Firepit">
+      <div class="lbl">Category</div>
+      <div class="grid3">
+        <div class="opt">Basement</div><div class="opt">Bar patio</div><div class="opt">Park</div>
+        <div class="opt">On water</div><div class="opt sel">Backyard</div><div class="opt">Rooftop</div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step" id="s2">
+      <div class="lbl">Who can find this spot?</div>
+      <div class="accopt"><b>◎</b><div><b>Open to all</b><div class="tiny">Anyone on Kick It can see it.</div></div></div>
+      <div class="accopt sel"><b>●</b><div><b>Friends only</b><div class="tiny">Just your crew. Shows in their feed.</div></div></div>
+      <div class="accopt"><b>★</b><div><b>Invite only</b><div class="tiny">Hidden. You add people one by one.</div></div></div>
+    </div>
+
+    <!-- STEP 3 — tag badges -->
+    <div class="step" id="s3">
+      <div class="lbl">Tag what's true about this spot</div>
+      <div class="tiny muted" style="margin-bottom:12px; font-weight:600;">Pick the badges that fit. Your crew can endorse them later.</div>
+
+      <div class="cat-label">Outdoors</div>
+      <div class="badges">
+        <span class="badge out selectable on">Sunset views</span>
+        <span class="badge out selectable">Shaded</span>
+        <span class="badge out selectable">By the water</span>
+        <span class="badge out selectable">Big sky</span>
+      </div>
+      <div class="cat-label">Vibe</div>
+      <div class="badges">
+        <span class="badge vibe selectable on">Loud-friendly</span>
+        <span class="badge vibe selectable on">Cannabis ok</span>
+        <span class="badge vibe selectable">BYOB welcome</span>
+        <span class="badge vibe selectable">Private</span>
+      </div>
+      <div class="cat-label">Features</div>
+      <div class="badges">
+        <span class="badge feat selectable on">Aux access</span>
+        <span class="badge feat selectable on">Charging</span>
+        <span class="badge feat selectable">WiFi</span>
+        <span class="badge feat selectable">Bathroom</span>
+        <span class="badge feat selectable">Parking</span>
+      </div>
+      <div class="cat-label">Access</div>
+      <div class="badges">
+        <span class="badge acc selectable on">Free</span>
+        <span class="badge acc selectable">Food nearby</span>
+        <span class="badge acc selectable">Dog friendly</span>
+        <span class="badge acc selectable">Big group ok</span>
+        <span class="badge acc selectable">Open late</span>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step" id="s4">
+      <div class="lbl">Describe the vibe</div>
+      <textarea class="field">Big firepit, plenty of chairs, dog-friendly. Nia's neighbors are chill so we can stay loud till midnight.</textarea>
+      <div class="lbl">Log your first hang <span class="muted" style="font-weight:600;">(optional)</span></div>
+      <input class="field" value="Kicked it off — s'mores and the new speaker.">
+      <div class="lbl">Who was there?</div>
+      <div class="row-flex" style="gap:8px;">
+        <div class="av md c2">M</div><div class="av md c3">S</div><div class="av md c4">D</div>
+        <div class="av md" style="background:#fff; color:var(--muted); border-style:dashed;">＋</div>
+      </div>
+    </div>
+
+    <!-- STEP 5 -->
+    <div class="step" id="s5">
+      <div class="lbl" style="margin-top:8px;">Last thing — which did you like better?</div>
+      <div class="tiny muted" style="margin-bottom:10px; font-weight:600;">A couple quick taps set the score. No stars, no overthinking.</div>
+      <div id="compare">
+        <div class="vs">
+          <div class="vs-card" onclick="pick()"><img src="https://picsum.photos/seed/firepit3/400/300"><div class="cap"><b class="small">Nia's Firepit</b><div class="tiny muted">the new one</div></div></div>
+          <div class="vs-mid">vs</div>
+          <div class="vs-card" onclick="pick()"><img src="https://picsum.photos/seed/tinroof2/400/300"><div class="cap"><b class="small">The Tin Roof</b><div class="tiny muted">8.4 on your list</div></div></div>
+        </div>
+        <div class="tiny muted" style="text-align:center; margin-top:14px; font-weight:700;" id="cmphint">Comparison 1 of 3</div>
+      </div>
+      <div id="result" style="display:none; text-align:center;">
+        <div class="reveal score" data-score="8.7">8.7</div>
+        <div style="font-size:22px; font-weight:800;">Nia's Firepit</div>
+        <div class="small muted" style="margin-top:4px; font-weight:600;">Lands at #4 on your ranked list</div>
+        <a href="spot.html" class="btn blue block" style="margin-top:20px;">View the spot</a>
+        <a href="feed.html" class="btn block" style="margin-top:10px;">Back to feed</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer" id="cta"><button class="btn blue block" id="nextbtn" onclick="next()">Continue</button></div>
+</div>
+<script src="app.js"></script>
+<script>
+  var step=1;
+  var labels=['Continue','Continue','Continue','Continue','Finish up'];
+  function next(){
+    if(step<5){
+      document.getElementById('s'+step).classList.remove('on');
+      step++;
+      document.getElementById('s'+step).classList.add('on');
+      document.getElementById('bar').style.width=(step*20)+'%';
+      document.getElementById('stepn').textContent='Step '+step;
+      document.getElementById('nextbtn').textContent=labels[step-1];
+      if(step===5) document.getElementById('cta').style.display='none';
+    }
+  }
+  var cmp=1;
+  function pick(){
+    cmp++;
+    if(cmp<=3){ document.getElementById('cmphint').textContent='Comparison '+cmp+' of 3'; }
+    else { document.getElementById('compare').style.display='none'; document.getElementById('result').style.display='block'; }
+  }
+</script>
+</body>
+</html>

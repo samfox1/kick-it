@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kick It — Explore</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .swipe { position:relative; height:478px; margin:0 18px; }
+  .swipe-card { position:absolute; inset:0; border:2px solid var(--ink); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); background:#fff; }
+  .swipe-card.b2 { transform:scale(.9) translateY(26px); } .swipe-card.b1 { transform:scale(.95) translateY(13px); }
+  .swipe-card img { width:100%; height:100%; object-fit:cover; }
+  .overlay { position:absolute; inset:0; background:linear-gradient(to top, rgba(17,17,17,.86) 22%, rgba(17,17,17,0) 56%); }
+  .acts { display:flex; justify-content:center; gap:18px; margin-top:18px; }
+  .round { width:58px; height:58px; border-radius:50%; border:2px solid var(--ink); background:#fff; box-shadow:var(--shadow-md);
+    display:grid; place-items:center; cursor:pointer; color:var(--ink); text-decoration:none; }
+  .round svg { width:24px; height:24px; }
+  .round.save { width:68px; height:68px; background:var(--blue); color:#fff; }
+  .round.save svg { width:28px; height:28px; }
+</style>
+</head>
+<body data-tab="explore">
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar"><span>9:41</span><span class="right"></span></div>
+
+  <div class="screen">
+    <div class="page-title" style="padding-top:10px;">Explore</div>
+    <div class="page-sub">New spots near you. Swipe right to save to your spots.</div>
+
+    <div class="pad" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:16px;">
+      <span class="badge" style="background:var(--ink); color:#fff;">All</span>
+      <span class="badge">Open</span>
+      <span class="badge">Friends</span>
+      <span class="badge feat">Has aux</span>
+      <span class="badge acc">Free</span>
+      <span class="badge vibe">Cannabis ok</span>
+    </div>
+
+    <div class="swipe">
+      <div class="swipe-card b2"><img src="https://picsum.photos/seed/firepit3/700/900" alt=""></div>
+      <div class="swipe-card b1"><img src="https://picsum.photos/seed/dock5/700/900" alt=""></div>
+      <div class="swipe-card">
+        <img src="https://picsum.photos/seed/cedarbench8/700/900" alt="">
+        <div class="overlay"></div>
+        <span class="sticker" style="position:absolute; top:14px; left:14px;">Open to all</span>
+        <span class="score md" data-score="7.8" style="position:absolute; top:14px; right:14px;">7.8</span>
+        <div style="position:absolute; left:16px; right:16px; bottom:16px; color:#fff;">
+          <div style="font-size:23px; font-weight:800; letter-spacing:-.3px;">Cedar Bench by the Oak</div>
+          <div class="small" style="opacity:.9; font-weight:600; margin-top:3px;">park · Cedar Park · free</div>
+          <p class="small" style="opacity:.92; margin-top:9px; line-height:1.5;">"Best sunset bench in the city. Come for golden hour — the oak blocks the wind…"</p>
+          <div class="badges" style="margin-top:11px;">
+            <span class="badge out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Sunset views</span>
+            <span class="badge acc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/></svg>Free</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="acts">
+      <div class="round"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></div>
+      <a href="spot.html" class="round save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></a>
+      <div class="round"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg></div>
+    </div>
+    <div class="tiny muted" style="text-align:center; margin-top:12px;">Skip · Save to my spots · Share — tap a card for the full spot</div>
+  </div>
+
+  <div class="tabbar"></div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

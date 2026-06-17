@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kick It — Spots</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .prefbtn { width:100%; display:flex; align-items:center; gap:8px; border:2px solid var(--ink); background:#fff;
+    box-shadow:var(--shadow-sm); border-radius:13px; padding:11px 13px; font-weight:800; font-size:13.5px;
+    cursor:pointer; margin-bottom:14px; font-family:var(--font); color:var(--ink); }
+  .prefbtn svg { width:16px; height:16px; }
+  .prefbtn .chev { margin-left:auto; color:#999; transition:transform .25s ease; }
+  .prefbtn.open .chev { transform:rotate(180deg); }
+  .prefs { max-height:0; overflow:hidden; transition:max-height .35s ease; }
+  .prefs.open { max-height:560px; margin-bottom:14px; }
+  .prefs-in { border:2px solid var(--ink); border-radius:16px; box-shadow:var(--shadow); padding:15px; background:#fff; }
+  .pref-h { font-weight:800; font-size:13px; }
+  .pref-h span { color:var(--blue); }
+  .pref-note { font-size:11px; color:var(--muted); font-weight:600; margin:3px 0 12px; }
+  input[type=range] { width:100%; accent-color:var(--blue); margin:8px 0 2px; }
+</style>
+</head>
+<body data-tab="spots">
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar"><span>9:41</span><span class="right"></span></div>
+
+  <div class="screen">
+    <div class="page-title" style="padding-top:10px;">the Spots</div>
+
+    <div class="pad">
+      <div class="seg" style="margin-bottom:14px;">
+        <button class="on" onclick="col(this,'local')">Local spots</button>
+        <button onclick="col(this,'mine')">My spots</button>
+      </div>
+
+      <!-- editable preferences for local spots -->
+      <button class="prefbtn" id="prefbtn" onclick="togglePrefs()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
+        <span id="preflabel">Preferences for local spots</span>
+        <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+      </button>
+      <div class="prefs" id="prefs">
+        <div class="prefs-in">
+          <div class="pref-h">Within <span id="distval">3 mi</span></div>
+          <input type="range" min="0.5" max="15" step="0.5" value="3" oninput="setDist(this.value)">
+          <div class="pref-note">How far you'll travel to kick it.</div>
+
+          <div class="pref-h">Non-negotiables &mdash; only show spots that have:</div>
+          <div class="pref-note">Tap the must-haves.</div>
+          <div class="badges">
+            <span class="badge feat selectable on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Aux access</span>
+            <span class="badge feat selectable"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>Charging</span>
+            <span class="badge vibe selectable on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Cannabis ok</span>
+            <span class="badge acc selectable"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/></svg>Free</span>
+            <span class="badge acc selectable"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Big group ok</span>
+            <span class="badge feat selectable"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Bathroom</span>
+            <span class="badge acc selectable"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5"/><path d="M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.96-1.45-2.344-2.5"/><path d="M8 14v.5"/><path d="M16 14v.5"/><path d="M11.25 16.25h1.5L12 17l-.75-.75z"/><path d="M4.42 11.247A13.152 13.152 0 0 0 4 14.556C4 18.728 7.582 21 12 21s8-2.272 8-6.444c0-1.061-.162-2.2-.493-3.309m-9.243-6.082A8.801 8.801 0 0 1 12 5c.78 0 1.5.108 2.161.306"/></svg>Dog friendly</span>
+          </div>
+        </div>
+      </div>
+      <div class="row-flex" style="margin-bottom:16px;">
+        <span class="small muted" style="font-weight:700;" id="count">8 spots near you</span>
+        <span class="spacer"></span>
+        <div class="vseg">
+          <button class="on" onclick="vw(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg></button>
+          <button onclick="vw(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg></button>
+        </div>
+      </div>
+
+      <!-- ranking rows (app.js sorts by score desc & opens the top one) -->
+      <div class="ranklist">
+      <div class="row">
+        <div class="row-top">
+          <img class="thumb" src="https://picsum.photos/seed/cedarbench8/160/160" alt="">
+          <div class="row-info"><div class="row-name">Cedar Bench by the Oak</div><div class="row-meta">park · 0.4 mi</div></div>
+          <div class="score md" data-score="7.8">7.8</div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="detail"><div class="detail-in">
+          <span class="sticker">Open to all</span>
+          <div class="cat-label" style="margin-top:11px;">What people vouch for</div>
+          <div class="badges">
+            <span class="badge out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Sunset views</span>
+            <span class="badge acc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/></svg>Free</span>
+          </div>
+          <a href="spot.html" class="viewlink" aria-label="View spot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+        </div></div>
+      </div>
+
+      <!-- ROW 2 -->
+      <div class="row">
+        <div class="row-top">
+          <img class="thumb" src="https://picsum.photos/seed/tinroof2/160/160" alt="">
+          <div class="row-info"><div class="row-name">The Tin Roof Patio</div><div class="row-meta">bar patio · 1.1 mi</div></div>
+          <div class="score md" data-score="8.4">8.4</div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="detail"><div class="detail-in">
+          <span class="sticker">Open to all</span>
+          <div class="cat-label" style="margin-top:11px;">What people vouch for</div>
+          <div class="badges">
+            <span class="badge acc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Food on site</span>
+            <span class="badge feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Aux access</span>
+          </div>
+          <a href="spot.html" class="viewlink" aria-label="View spot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+        </div></div>
+      </div>
+
+      <!-- ROW 3 -->
+      <div class="row">
+        <div class="row-top">
+          <img class="thumb" src="https://picsum.photos/seed/dock5/160/160" alt="">
+          <div class="row-info"><div class="row-name">The Loading Dock</div><div class="row-meta">lot · 2.3 mi</div></div>
+          <div class="score md" data-score="6.2">6.2</div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="detail"><div class="detail-in">
+          <span class="sticker">Invite only</span>
+          <div class="cat-label" style="margin-top:11px;">What people vouch for</div>
+          <div class="badges">
+            <span class="badge vibe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Loud-friendly</span>
+            <span class="badge acc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/></svg>Open late</span>
+          </div>
+          <a href="spot.html" class="viewlink" aria-label="View spot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+        </div></div>
+      </div>
+
+      <!-- ROW 4 -->
+      <div class="row">
+        <div class="row-top">
+          <img class="thumb" src="https://picsum.photos/seed/riverwalk1/160/160" alt="">
+          <div class="row-info"><div class="row-name">Riverwalk Steps</div><div class="row-meta">waterfront · 1.6 mi</div></div>
+          <div class="score md" data-score="7.1">7.1</div>
+          <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="detail"><div class="detail-in">
+          <span class="sticker">Open to all</span>
+          <div class="cat-label" style="margin-top:11px;">What people vouch for</div>
+          <div class="badges">
+            <span class="badge out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1C7 13 7 11 9.5 11c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1C7 19 7 17 9.5 17c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>On the water</span>
+            <span class="badge acc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/></svg>Free</span>
+          </div>
+          <a href="spot.html" class="viewlink" aria-label="View spot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+        </div></div>
+      </div>
+
+      </div>
+      <div class="tiny muted" style="text-align:center; margin-top:2px;">Tap a row to see its tags &amp; badges</div>
+      <div class="scroll-bottom"></div>
+    </div>
+  </div>
+
+  <div class="tabbar"></div>
+</div>
+<script src="app.js"></script>
+<script>
+  function col(btn,which){ document.querySelectorAll('.seg button').forEach(function(b){b.classList.remove('on')}); btn.classList.add('on');
+    document.getElementById('count').textContent = which==='mine' ? '23 spots in your map' : '8 spots near you';
+    document.getElementById('preflabel').textContent = which==='mine' ? 'Preferences for my spots' : 'Preferences for local spots'; }
+  function vw(btn){ btn.parentNode.querySelectorAll('button').forEach(function(b){b.classList.remove('on')}); btn.classList.add('on'); }
+  function togglePrefs(){ document.getElementById('prefs').classList.toggle('open'); document.getElementById('prefbtn').classList.toggle('open'); }
+  function setDist(v){ document.getElementById('distval').textContent = v + ' mi'; }
+</script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kick It — Round 4: Color System</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#101012; color:#ececf0; font-family:'Inter',system-ui,sans-serif; padding:34px 22px 80px; }
+  .head { max-width:1100px; margin:0 auto 30px; }
+  .head h1 { font-size:28px; font-weight:800; letter-spacing:-.5px; }
+  .head p { color:#9a9aa4; margin-top:8px; font-size:15px; line-height:1.55; max-width:720px; }
+  .bar { max-width:1100px; margin:0 auto 26px; display:flex; gap:10px; flex-wrap:wrap; }
+  .btn { font-size:13px; font-weight:700; padding:9px 15px; border-radius:10px; border:1px solid #34343c; background:#1b1b20; color:#ececf0; cursor:pointer; }
+  .btn.go { background:#ececf0; color:#101012; border-color:#ececf0; }
+  .grid { display:flex; flex-wrap:wrap; gap:30px; justify-content:center; max-width:1240px; margin:0 auto; }
+  .cell { width:300px; }
+  .cap { display:flex; align-items:baseline; gap:8px; margin-bottom:10px; }
+  .cap .num { font-size:11px; font-weight:800; letter-spacing:.18em; color:#6f6f7a; }
+  .cap .nm { font-size:16px; font-weight:700; }
+  .tagline { color:#8d8d97; font-size:12.5px; line-height:1.4; margin-bottom:12px; min-height:48px; }
+  .stage { width:288px; height:576px; overflow:hidden; border-radius:24px; box-shadow:0 18px 44px rgba(0,0,0,.5); }
+  .stage > * { transform:scale(.8); transform-origin:top left; }
+  textarea { width:100%; min-height:74px; margin-top:13px; padding:11px; border-radius:12px;
+    border:1px solid #34343c; background:#16161b; color:#ececf0; font-family:inherit; font-size:13px; resize:vertical; }
+  textarea:focus { outline:none; border-color:#6f6f7a; }
+  .saved { font-size:11px; color:#4ecb8f; height:14px; margin-top:4px; opacity:0; transition:opacity .2s; }
+  .saved.show { opacity:1; }
+</style>
+</head>
+<body>
+  <div class="head">
+    <h1>Kick It — Round 4: the color system</h1>
+    <p>Locked: Inter, white base, ink containers + offset shadow, rotated sticker tags, speech-bubble score. NEW in all four: <b>scores are colored by their number</b> (10 = green → 0 = red) — scroll the "More spots" list to see 9.6 / 7.0 / 4.8 shift green → yellow → amber. The four differ only in <b>how much extra color</b> they use. Notes autosave; <b>Copy all my notes</b> → paste back.</p>
+  </div>
+  <div class="bar">
+    <button class="btn go" onclick="copyAll()">⧉ Copy all my notes</button>
+    <button class="btn" onclick="clearAll()">Clear notes</button>
+  </div>
+  <div class="grid" id="grid"></div>
+
+<!-- ============================================================
+     NOTES — you can also type directly here:
+     LOOK 31 (Colorful badges):
+     LOOK 32 (Color-pop, neutral base):
+     LOOK 33 (Candy / full color):
+     LOOK 34 (Semantic palette):
+============================================================ -->
+
+<script src="looks-data-4.js"></script>
+<script>
+function build(){
+  const VARIANTS = window.__VARIANTS__;
+  const st = document.createElement('style');
+  st.textContent = VARIANTS.map(v => v.css).join('\n');
+  document.head.appendChild(st);
+  const grid = document.getElementById('grid');
+  const store = JSON.parse(localStorage.getItem('kickit_looks4')||'{}');
+  VARIANTS.forEach(v => {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.innerHTML =
+      '<div class="cap"><span class="num">V'+String(v.id).padStart(2,'0')+'</span><span class="nm">'+v.name+'</span></div>'+
+      '<div class="tagline">'+v.tagline+'</div>'+
+      '<div class="stage">'+v.html+'</div>'+
+      '<textarea data-id="'+v.id+'" placeholder="Notes on '+v.name+'…">'+(store[v.id]||'')+'</textarea>'+
+      '<div class="saved" data-badge="'+v.id+'">saved</div>';
+    grid.appendChild(cell);
+  });
+  let t={};
+  grid.addEventListener('input', e=>{
+    const ta = e.target.closest('textarea'); if(!ta) return;
+    const id = ta.dataset.id;
+    clearTimeout(t[id]);
+    t[id]=setTimeout(()=>{
+      const s = JSON.parse(localStorage.getItem('kickit_looks4')||'{}');
+      s[id]=ta.value; localStorage.setItem('kickit_looks4', JSON.stringify(s));
+      const b=document.querySelector('[data-badge="'+id+'"]'); b.classList.add('show'); setTimeout(()=>b.classList.remove('show'),1000);
+    },350);
+  });
+}
+function copyAll(){
+  const VARIANTS = window.__VARIANTS__;
+  const s = JSON.parse(localStorage.getItem('kickit_looks4')||'{}');
+  const lines = VARIANTS.map(v => 'LOOK '+v.id+' ('+v.name+'): '+((s[v.id]||'').trim()||'—'));
+  navigator.clipboard.writeText(lines.join('\n')).then(
+    ()=>alert('Copied your notes — paste them back to Claude.'),
+    ()=>prompt('Copy manually:', lines.join('\n')));
+}
+function clearAll(){ if(confirm('Clear all notes?')){ localStorage.removeItem('kickit_looks4'); location.reload(); } }
+window.addEventListener('load', build);
+</script>
+</body>
+</html>

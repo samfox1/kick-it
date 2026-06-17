@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kick It — Prototype</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .cover { flex:1; display:flex; flex-direction:column; }
+  .hero { position:relative; height:50%; border-bottom:2px solid var(--ink); overflow:hidden; }
+  .hero img { width:100%; height:100%; object-fit:cover; }
+  .hero .score { position:absolute; right:18px; bottom:-22px; }
+  .body { flex:1; padding:34px 26px 26px; display:flex; flex-direction:column; }
+  .jump { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:16px; }
+  .jump a { font-size:12px; font-weight:700; border:2px solid var(--ink); border-radius:999px; padding:6px 12px; text-decoration:none; box-shadow:var(--shadow-sm); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar"><span>9:41</span><span class="right"></span></div>
+
+  <div class="cover">
+    <div class="hero">
+      <img src="https://picsum.photos/seed/firepit3/800/700" alt="">
+      <span class="score lg" data-score="9.6">9.6</span>
+    </div>
+    <div class="body">
+      <img src="img/kick_it_text.png" alt="Kick It" style="width:212px; margin-top:8px; display:block;">
+      <div style="font-weight:700; font-size:17px; color:var(--muted); margin-top:8px; line-height:1.4;">
+        Beli, but for the places you kick it with your friends.
+      </div>
+      <p class="small muted" style="margin-top:14px; line-height:1.55; font-weight:600;">
+        The basement. The bar patio. The bench by the oak. Your uncle's pontoon.
+        Rank them, remember them, find new ones.
+      </p>
+      <span class="spacer"></span>
+      <a href="feed.html" class="btn blue block">Open the app →</a>
+      <div class="jump">
+        <a href="feed.html">Feed</a>
+        <a href="explore.html">Explore</a>
+        <a href="spots.html">Spots</a>
+        <a href="spot.html">Spot</a>
+        <a href="add.html">Add</a>
+        <a href="profile.html">Profile</a>
+      </div>
+      <div class="tiny muted" style="text-align:center; margin-top:14px; font-weight:600;">Mock prototype · all data is fake</div>
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
