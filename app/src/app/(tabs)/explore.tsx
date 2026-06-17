@@ -76,7 +76,7 @@ function DeckCard({ spot, top, onOpen }: { spot: Spot; top: boolean; onOpen?: ()
 
 export default function ExploreScreen() {
   const router = useRouter();
-  const { local, mine, loaded, load, preferences, setMaxDistance, toggleNonNegotiable } =
+  const { local, mine, saved, loaded, load, preferences, setMaxDistance, toggleNonNegotiable } =
     useSpotsStore();
   const { state: locationState, request } = useLocationPermission();
   const [tab, setTab] = useState<Tab>('public');
@@ -101,7 +101,9 @@ export default function ExploreScreen() {
 
   const maxMi = preferences.maxDistanceMi;
   const nonNeg = preferences.nonNegotiables;
-  const catalog = exploreCatalog(local, mine);
+  // Discovery shows only spots you haven't collected yet, so swipe-to-save always saves.
+  const ownedIds = new Set([...mine, ...saved].map((s) => s.id));
+  const catalog = exploreCatalog(local, mine).filter((s) => !ownedIds.has(s.id));
   const list = tab === 'public' ? nearbySpots(catalog, maxMi, nonNeg) : crewSpots(catalog, nonNeg);
 
   // Start the deck over whenever the tab or filters change the set of spots.

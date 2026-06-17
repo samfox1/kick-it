@@ -24,11 +24,13 @@ function renderScreen() {
 }
 
 describe('Spots screen', () => {
-  it('shows the title and loads local spots, ranked by score', async () => {
+  it('shows the title and loads only savable local spots (excludes ones already collected)', async () => {
     renderScreen();
     expect(screen.getByText('the Spots')).toBeOnTheScreen();
-    // After the async load, the highest-scoring local spot (Tin Roof, 8.4) is shown.
-    expect(await screen.findByText('The Tin Roof Patio')).toBeOnTheScreen();
-    expect(screen.getByText('The Loading Dock')).toBeOnTheScreen();
+    // Local discovery shows spots not already in your ranked list.
+    expect(await screen.findByText('The Loading Dock')).toBeOnTheScreen();
+    expect(screen.getByText('Riverwalk Steps')).toBeOnTheScreen();
+    // Tin Roof is already ranked (in `mine`) → not shown as a discoverable local spot.
+    expect(screen.queryByText('The Tin Roof Patio')).not.toBeOnTheScreen();
   });
 });

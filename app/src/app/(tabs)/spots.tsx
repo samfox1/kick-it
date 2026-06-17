@@ -24,6 +24,7 @@ export default function SpotsScreen() {
     collection,
     local,
     mine,
+    saved,
     preferences,
     loaded,
     load,
@@ -53,8 +54,10 @@ export default function SpotsScreen() {
     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.ink} />
   );
 
+  // Discovery (Local) hides spots already saved or ranked, so every one is savable.
+  const ownedIds = [...mine, ...saved].map((s) => s.id);
   const spots =
-    collection === 'local' ? visibleLocalSpots(local, preferences) : visibleMySpots(mine);
+    collection === 'local' ? visibleLocalSpots(local, preferences, ownedIds) : visibleMySpots(mine);
   const count =
     collection === 'local' ? `${spots.length} spots near you` : `${spots.length} spots in your map`;
   const prefLabel =

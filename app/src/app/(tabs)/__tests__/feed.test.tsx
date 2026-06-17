@@ -14,15 +14,15 @@ const metrics = {
 };
 
 describe('Feed screen', () => {
-  it('renders the activity feed (new spot, hang, ranked)', async () => {
+  it('renders the activity feed (hangs and rankings, no new spots)', async () => {
     render(
       <SafeAreaProvider initialMetrics={metrics}>
         <FeedScreen />
       </SafeAreaProvider>,
     );
-    expect(await screen.findByText("Marcus's Rooftop")).toBeOnTheScreen();
-    expect(screen.getByText('Marcus added a new spot')).toBeOnTheScreen();
-    expect(screen.getByText(/Sara logged a hang at/)).toBeOnTheScreen();
+    expect(await screen.findByText(/Sara logged a hang at/)).toBeOnTheScreen();
     expect(screen.getByText('Dev ranked a spot')).toBeOnTheScreen();
+    // New spots live on Explore, not the feed.
+    expect(screen.queryByText('Marcus added a new spot')).not.toBeOnTheScreen();
   });
 });

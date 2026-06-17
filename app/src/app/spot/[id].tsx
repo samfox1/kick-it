@@ -117,24 +117,27 @@ export default function SpotDetailScreen() {
           >
             <ChevronLeft size={20} color={colors.ink} strokeWidth={2} />
           </Pressable>
-          <Pressable
-            style={({ pressed }) => [
-              styles.heroBtn,
-              { top: insets.top + 10, right: 16 },
-              isSaved && styles.heroBtnSaved,
-              pressed && pressedStyle,
-            ]}
-            onPress={toggleSave}
-            accessibilityRole="button"
-            accessibilityState={{ selected: isSaved }}
-          >
-            <Bookmark
-              size={20}
-              color={isSaved ? '#fff' : colors.ink}
-              fill={isSaved ? '#fff' : 'transparent'}
-              strokeWidth={2}
-            />
-          </Pressable>
+          {/* Saving only applies to spots not yet in your ranked list. */}
+          {!isRanked && (
+            <Pressable
+              style={({ pressed }) => [
+                styles.heroBtn,
+                { top: insets.top + 10, right: 16 },
+                isSaved && styles.heroBtnSaved,
+                pressed && pressedStyle,
+              ]}
+              onPress={toggleSave}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSaved }}
+            >
+              <Bookmark
+                size={20}
+                color={isSaved ? colors.paper : colors.ink}
+                fill={isSaved ? colors.paper : 'transparent'}
+                strokeWidth={2}
+              />
+            </Pressable>
+          )}
           <View style={styles.stickerOverlay}>
             <AccessSticker access={spot.access} />
           </View>

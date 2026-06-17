@@ -10,6 +10,10 @@ export const colors = {
   muted2: '#aaaaaa',
   soft: '#f1f1ee',
   like: '#ef4444',
+  /** Darker neutral for "+N" overflow avatars. */
+  slate: '#555555',
+  /** Modal backdrop scrim (ink at 40%). */
+  scrim: 'rgba(17,17,17,0.4)',
 };
 
 /** Semantic category colors for characteristic badges. */
