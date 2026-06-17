@@ -17,9 +17,10 @@ export function useSpotDetail(id: string) {
   useEffect(() => {
     let alive = true;
     void (async () => {
-      const s = await spotRepo.getById(id);
+      const res = await spotRepo.getById(id);
       if (alive) {
-        setSpot(s);
+        // On failure, fall back to "not found" — the screen already handles undefined.
+        setSpot(res.ok ? res.value : undefined);
         setLoading(false);
       }
     })();

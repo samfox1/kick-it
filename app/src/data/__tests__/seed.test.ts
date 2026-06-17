@@ -1,6 +1,7 @@
 import { SEED, createDefaultSpotRepository } from '../mock/seed';
 import { getCharacteristic } from '../../domain/characteristics';
 import type { Spot } from '../../domain/models';
+import { unwrap } from '../../test-utils/result';
 
 const allSpots: Spot[] = [...SEED.local, ...SEED.mine];
 
@@ -28,7 +29,7 @@ describe('seed data integrity', () => {
 
   it('exposes a default repository over the seed', async () => {
     const repo = createDefaultSpotRepository();
-    expect((await repo.listLocal()).length).toBe(SEED.local.length);
-    expect((await repo.getById('pontoon'))?.name).toBe("Uncle Rick's Pontoon");
+    expect(unwrap(await repo.listLocal()).items.length).toBe(SEED.local.length);
+    expect(unwrap(await repo.getById('pontoon'))?.name).toBe("Uncle Rick's Pontoon");
   });
 });

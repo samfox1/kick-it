@@ -12,15 +12,12 @@ store tests) are already done. What remains is below.
 
 ## 1. Repository contract isn't actually swap-ready (contradicts ADR-0002)
 
-- **No error contract.** `Promise<Spot[]>` / `Promise<Spot | undefined>` can't
-  express network failure or auth rejection. Every call site assumes success
-  (`spotsStore.load`, `useSpotDetail`). Decide reject-vs-`Result<T, RepoError>`
-  now and wrap call sites, or every one rewrites later.
-  Files: `src/data/SpotRepository.ts`, `FeedRepository.ts`, `HangRepository.ts`.
-- **No pagination.** `listLocal/listMine/listFeed/listForSpot` return full arrays.
-  Adding `{ cursor, limit }` + a `Page<T>` return later breaks every signature —
-  the exact thing ADR-0002 promises won't happen. Add the optional shape now even
-  if the mock ignores it.
+- ~~**No error contract.**~~ ✅ Done (branch `feat/repo-contracts`). Repos now return
+  `Result<T>` with a typed `RepoError` (`src/data/result.ts`); `spotsStore`/`feedStore`
+  handle failure and expose an `error` field; `useSpotDetail` falls back to not-found.
+- ~~**No pagination.**~~ ✅ Done (same branch). List methods take `PageParams` and
+  return `Page<T>` (`src/data/page.ts`), with a `paginate` mock helper. Stores read
+  `.items`; a real backend can page without signature changes.
 - **Mock counts live in the domain layer, sync.** `vouchCount` (`src/domain/vouch.ts`)
   and `saveCountForSpot` (`src/domain/spotStats.ts`) are hash fakes called
   synchronously. When they become network reads they break every caller. Move them

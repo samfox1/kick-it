@@ -27,15 +27,22 @@ function withStats(items: FeedItem[]): FeedItem[] {
 interface FeedState {
   items: FeedItem[];
   loaded: boolean;
+  /** Set when the last load failed, so the UI can show/retry. Null on success. */
+  error: string | null;
   load: () => Promise<void>;
 }
 
 export const useFeedStore = create<FeedState>((set) => ({
   items: [],
   loaded: false,
+  error: null,
   load: async () => {
-    const items = await repo.listFeed();
+    const res = await repo.listFeed();
+    if (!res.ok) {
+      set({ loaded: true, error: res.error.message });
+      return;
+    }
     const friendIds = crewFriendIds(useCrewStore.getState().members);
-    set({ items: withStats(visibleFeed(items, friendIds)), loaded: true });
+    set({ items: withStats(visibleFeed(res.value.items, friendIds)), loaded: true, error: null });
   },
 }));

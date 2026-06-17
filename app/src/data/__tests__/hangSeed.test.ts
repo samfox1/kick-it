@@ -1,3 +1,4 @@
+import { unwrap } from '../../test-utils/result';
 import { HANGS, createDefaultHangRepository } from '../mock/hangSeed';
 
 describe('hang seed integrity', () => {
@@ -8,7 +9,7 @@ describe('hang seed integrity', () => {
 
   it('default repository returns a spot’s hangs', async () => {
     const repo = createDefaultHangRepository();
-    const pontoon = await repo.listForSpot('pontoon');
+    const pontoon = unwrap(await repo.listForSpot('pontoon')).items;
     expect(pontoon.length).toBeGreaterThanOrEqual(2);
     expect(pontoon.every((h) => h.spotId === 'pontoon')).toBe(true);
   });
