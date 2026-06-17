@@ -37,6 +37,10 @@ export interface Spot {
   description?: string;
 }
 
+/** Input to create a spot. `id` and `score` (derived from rank) and `vouchCounts`
+ *  (attached by the repo) are not caller-supplied. */
+export type NewSpot = Omit<Spot, 'id' | 'score' | 'vouchCounts'>;
+
 /** A spot's photos as a gallery: the explicit `images`, else just the cover. */
 export function spotGallery(spot: Pick<Spot, 'image' | 'images'>): string[] {
   return spot.images && spot.images.length > 0 ? spot.images : [spot.image];
@@ -44,6 +48,9 @@ export function spotGallery(spot: Pick<Spot, 'image' | 'images'>): string[] {
 
 /** A reaction a crew member can leave on a hang. */
 export type ReactionKey = 'heart' | 'fire' | 'haha';
+
+/** Input to create a hang. `id`, `when`, `likes`, `extraAttendees` are server-owned. */
+export type NewHang = Omit<Hang, 'id' | 'when' | 'likes' | 'extraAttendees'>;
 
 /** A single logged hangout at a spot (builds a spot's Hang Ledger). */
 export interface Hang {

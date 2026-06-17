@@ -8,24 +8,8 @@ const marcus: Member = { id: 'marcus', name: 'Marcus', initial: 'M' };
 const sara: Member = { id: 'sara', name: 'Sara', initial: 'S' };
 const dev: Member = { id: 'dev', name: 'Dev', initial: 'D' };
 
+// New spots are discovered on Explore, not the feed — the feed is hangs + rankings.
 const FEED: FeedItem[] = [
-  {
-    kind: 'new_spot',
-    id: 'f1',
-    by: marcus,
-    when: '2h ago',
-    spotId: 'rooftop',
-    spotName: "Marcus's Rooftop",
-    category: 'rooftop',
-    location: 'Eastside',
-    access: 'friends',
-    score: 8.9,
-    image: img('rooftop9'),
-    review: 'Best skyline in the city. We strung up lights and dragged a couch up the fire escape…',
-    characteristicIds: ['charging', 'cannabis', 'view'],
-    hangs: 2,
-    saved: 8,
-  },
   {
     kind: 'hang',
     id: 'f2',

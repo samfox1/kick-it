@@ -44,4 +44,30 @@ describe('MockSpotRepository', () => {
     expect(second.items.map((s) => s.id)).toEqual(['l2']);
     expect(second.nextCursor).toBeUndefined();
   });
+
+  const spotDraft = {
+    name: 'My Backyard',
+    category: 'backyard',
+    access: 'friends' as const,
+    distanceMi: 0,
+    location: '',
+    image: 'x.jpg',
+    characteristicIds: [],
+  };
+
+  it('createSpot stores a new spot in mine and fills id + placeholder score', async () => {
+    const repo2 = new MockSpotRepository({ local: [], mine: [] });
+    const created = unwrap(await repo2.createSpot(spotDraft));
+    expect(created.id).toBeTruthy();
+    expect(created.name).toBe('My Backyard');
+    expect(created.score).toBe(0); // re-derived from rank by the store
+    expect(unwrap(await repo2.listMine()).items.map((s) => s.id)).toContain(created.id);
+  });
+
+  it('createSpot does not mutate the seed passed to the constructor', async () => {
+    const seed = { local: [], mine: [] };
+    const repo2 = new MockSpotRepository(seed);
+    await repo2.createSpot(spotDraft);
+    expect(seed.mine).toHaveLength(0); // repo owns a copy
+  });
 });

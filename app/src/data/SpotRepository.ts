@@ -1,4 +1,4 @@
-import type { Spot } from '../domain/models';
+import type { NewSpot, Spot } from '../domain/models';
 import type { Page, PageParams } from './page';
 import type { Result } from './result';
 
@@ -15,4 +15,6 @@ export interface SpotRepository {
   listMine(params?: PageParams): Promise<Result<Page<Spot>>>;
   /** A single spot by id; `value` is undefined when the spot genuinely doesn't exist. */
   getById(id: string): Promise<Result<Spot | undefined>>;
+  /** Create a new spot; the repo assigns id (and a placeholder score). Returns the record. */
+  createSpot(input: NewSpot): Promise<Result<Spot>>;
 }

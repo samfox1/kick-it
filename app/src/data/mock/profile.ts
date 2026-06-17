@@ -1,12 +1,10 @@
 import type { Member } from '../../domain/models';
 
-/** The single mock user (no auth yet). */
-export const CURRENT_USER = {
-  id: 'sam',
-  name: 'Sam Fox',
-  handle: '@samkicks',
-  initial: 'S',
-};
+/** The single mock user as a crew Member — the one identity used everywhere (feed, hangs). */
+export const CURRENT_MEMBER: Member = { id: 'sam', name: 'Sam Fox', initial: 'S' };
+
+/** The single mock user (no auth yet) — the member plus profile-only fields. */
+export const CURRENT_USER = { ...CURRENT_MEMBER, handle: '@samkicks' };
 
 /** The user's crew (accepted members). */
 export const CREW: Member[] = [
