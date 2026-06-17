@@ -17,6 +17,8 @@ interface SpotsState {
   saved: Spot[];
   preferences: Preferences;
   loaded: boolean;
+  /** Set when the last load failed, so the UI can show/retry. Null on success. */
+  error: string | null;
   load: () => Promise<void>;
   setCollection: (c: Collection) => void;
   setMaxDistance: (mi: number) => void;
@@ -38,10 +40,19 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
   saved: [],
   preferences: { maxDistanceMi: 5, nonNegotiables: [] },
   loaded: false,
+  error: null,
 
   load: async () => {
-    const [local, mine] = await Promise.all([repo.listLocal(), repo.listMine()]);
-    set({ local, mine, loaded: true });
+    const [localRes, mineRes] = await Promise.all([repo.listLocal(), repo.listMine()]);
+    if (!localRes.ok) {
+      set({ loaded: true, error: localRes.error.message });
+      return;
+    }
+    if (!mineRes.ok) {
+      set({ loaded: true, error: mineRes.error.message });
+      return;
+    }
+    set({ local: localRes.value.items, mine: mineRes.value.items, loaded: true, error: null });
   },
 
   setCollection: (collection) => set({ collection }),
