@@ -1,21 +1,23 @@
-import { topEndorsed, vouchCount } from '../vouch';
+import { topEndorsed } from '../vouch';
 
 describe('topEndorsed', () => {
-  const ids = ['aux', 'wifi', 'free', 'dog', 'view', 'loud', 'sunset'];
+  const counts = { aux: 18, wifi: 3, free: 12, dog: 7, view: 15 };
+  const ids = ['aux', 'wifi', 'free', 'dog', 'view'];
 
   it('returns at most n characteristics', () => {
-    expect(topEndorsed('spot-1', ids, 4)).toHaveLength(4);
+    expect(topEndorsed(counts, ids, 4)).toHaveLength(4);
   });
 
   it('orders by endorsement count, highest first', () => {
-    const out = topEndorsed('spot-1', ids, 4);
-    for (let i = 1; i < out.length; i++) {
-      expect(vouchCount('spot-1', out[i - 1])).toBeGreaterThanOrEqual(vouchCount('spot-1', out[i]));
-    }
+    expect(topEndorsed(counts, ids, 5)).toEqual(['aux', 'view', 'free', 'dog', 'wifi']);
+  });
+
+  it('treats a missing count as zero (sorts last)', () => {
+    expect(topEndorsed({ aux: 5 }, ['unknown', 'aux'], 2)).toEqual(['aux', 'unknown']);
   });
 
   it('only returns ids it was given, and not more than exist', () => {
-    const out = topEndorsed('spot-1', ['aux', 'wifi'], 4);
+    const out = topEndorsed(counts, ['aux', 'wifi'], 4);
     expect(out).toHaveLength(2);
     out.forEach((id) => expect(['aux', 'wifi']).toContain(id));
   });
