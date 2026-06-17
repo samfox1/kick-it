@@ -1,9 +1,13 @@
 import { create } from 'zustand';
 
+import { CURRENT_MEMBER } from '@/data/mock/profile';
 import { createDefaultSpotRepository } from '@/data/mock/seed';
 import type { SpotRepository } from '@/data/SpotRepository';
-import type { Preferences, Spot } from '@/domain/models';
+import type { Result } from '@/data/result';
+import { rankingToFeedItem } from '@/domain/feedItem';
+import type { NewSpot, Preferences, Spot } from '@/domain/models';
 import { applyRankScores, sortByScoreDesc } from '@/domain/ranking';
+import { useFeedStore } from '@/store/feedStore';
 
 /** The single seam to data. Swap this for a backed repository later — store/screens unchanged. */
 const repo: SpotRepository = createDefaultSpotRepository();
@@ -35,6 +39,8 @@ interface SpotsState {
   rankSpot: (spot: Spot, index: number) => void;
   /** Reorder the ranked list to a new order (e.g. after drag) and re-derive scores. */
   reorderMine: (ordered: Spot[]) => void;
+  /** Create a brand-new spot (id from the repo), then rank it at `index`. */
+  addSpot: (draft: NewSpot, index: number) => Promise<Result<Spot>>;
 }
 
 export const useSpotsStore = create<SpotsState>((set, get) => ({
@@ -87,13 +93,26 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
 
   isSaved: (id) => get().saved.some((m) => m.id === id),
 
-  rankSpot: (spot, index) =>
-    set((s) => {
-      const without = s.mine.filter((m) => m.id !== spot.id);
-      const clamped = Math.max(0, Math.min(without.length, index));
-      const next = [...without.slice(0, clamped), spot, ...without.slice(clamped)];
-      return { mine: applyRankScores(next), saved: s.saved.filter((m) => m.id !== spot.id) };
-    }),
+  rankSpot: (spot, index) => {
+    const s = get();
+    const isFirstTime = !s.mine.some((m) => m.id === spot.id);
+    const without = s.mine.filter((m) => m.id !== spot.id);
+    const clamped = Math.max(0, Math.min(without.length, index));
+    const mine = applyRankScores([...without.slice(0, clamped), spot, ...without.slice(clamped)]);
+    set({ mine, saved: s.saved.filter((m) => m.id !== spot.id) });
+    // Only a spot's first ranking is feed-worthy — re-ranks and drags stay quiet.
+    if (isFirstTime) {
+      const ranked = mine.find((m) => m.id === spot.id);
+      if (ranked)
+        useFeedStore.getState().prepend(rankingToFeedItem(CURRENT_MEMBER, ranked, clamped + 1));
+    }
+  },
 
   reorderMine: (ordered) => set(() => ({ mine: applyRankScores(ordered) })),
+
+  addSpot: async (draft, index) => {
+    const res = await repo.createSpot(draft);
+    if (res.ok) get().rankSpot(res.value, index);
+    return res;
+  },
 }));

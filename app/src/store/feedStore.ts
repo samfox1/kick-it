@@ -31,12 +31,15 @@ interface FeedState {
   /** Set when the last load failed, so the UI can show/retry. Null on success. */
   error: string | null;
   load: () => Promise<void>;
+  /** Prepend a new activity item (built by the domain feed mappers) to the top. */
+  prepend: (item: FeedItem) => void;
 }
 
 export const useFeedStore = create<FeedState>((set) => ({
   items: [],
   loaded: false,
   error: null,
+  prepend: (item) => set((s) => ({ items: [item, ...s.items] })),
   load: async () => {
     const res = await repo.listFeed();
     if (!res.ok) {

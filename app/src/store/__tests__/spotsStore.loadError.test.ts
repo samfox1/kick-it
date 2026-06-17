@@ -8,6 +8,7 @@ jest.mock('@/data/mock/seed', () => {
     listLocal: async () => ({ ok: false, error: { code: 'network', message: 'offline' } }),
     listMine: async () => ({ ok: true, value: { items: [] } }),
     getById: async () => ({ ok: true, value: undefined }),
+    createSpot: async () => ({ ok: false, error: { code: 'unknown', message: 'n/a' } }),
   };
   return { createDefaultSpotRepository: () => repo, SEED: { local: [], mine: [] } };
 });

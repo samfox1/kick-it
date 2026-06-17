@@ -7,6 +7,7 @@ beforeEach(() => {
       { id: 'tess', name: 'Tess', initial: 'T' },
       { id: 'rick', name: 'Rick', initial: 'R' },
     ],
+    invited: [],
   });
 });
 
@@ -28,5 +29,12 @@ describe('crewStore', () => {
   it('ignores accepting an unknown request', () => {
     useCrewStore.getState().acceptRequest('nobody');
     expect(useCrewStore.getState().members).toHaveLength(1);
+  });
+
+  it('invite records a pending outgoing invite, idempotently', () => {
+    const tess = { id: 'tess', name: 'Tess', initial: 'T' };
+    useCrewStore.getState().invite(tess);
+    useCrewStore.getState().invite(tess);
+    expect(useCrewStore.getState().invited).toEqual(['tess']);
   });
 });

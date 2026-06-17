@@ -1,4 +1,5 @@
 import { useSpotsStore } from '../spotsStore';
+import { useFeedStore } from '../feedStore';
 import { makeSpot } from '../../test-utils/factories';
 
 describe('spotsStore saved collection', () => {
@@ -69,6 +70,66 @@ describe('spotsStore.rankSpot', () => {
     useSpotsStore.setState({ mine: [], saved: [saved] });
     useSpotsStore.getState().rankSpot(makeSpot({ id: 'other' }), 0);
     expect(useSpotsStore.getState().saved.map((s) => s.id)).toEqual(['keep']);
+  });
+});
+
+describe('spotsStore ranking → feed', () => {
+  beforeEach(() => {
+    useFeedStore.setState({ items: [], loaded: true, error: null });
+    useSpotsStore.setState({ mine: [], saved: [] });
+  });
+
+  it('posts a ranked feed item the first time a spot is ranked', () => {
+    useSpotsStore.getState().rankSpot(makeSpot({ id: 'new' }), 0);
+    expect(
+      useFeedStore.getState().items.some((i) => i.kind === 'ranked' && i.spotId === 'new'),
+    ).toBe(true);
+  });
+
+  it('does NOT post when re-ranking a spot already in the list', () => {
+    useSpotsStore.setState({ mine: [makeSpot({ id: 'a' }), makeSpot({ id: 'b' })] });
+    useFeedStore.setState({ items: [] });
+    useSpotsStore.getState().rankSpot(makeSpot({ id: 'a' }), 1);
+    expect(useFeedStore.getState().items.some((i) => i.kind === 'ranked')).toBe(false);
+  });
+
+  it('does NOT post when reordering by drag', () => {
+    const spots = [makeSpot({ id: 'a' }), makeSpot({ id: 'b' })];
+    useSpotsStore.setState({ mine: spots });
+    useFeedStore.setState({ items: [] });
+    useSpotsStore.getState().reorderMine([spots[1], spots[0]]);
+    expect(useFeedStore.getState().items).toHaveLength(0);
+  });
+});
+
+describe('spotsStore.addSpot', () => {
+  beforeEach(() => {
+    useSpotsStore.setState({ mine: [], saved: [] });
+    useFeedStore.setState({ items: [], loaded: true, error: null });
+  });
+
+  it('creates a spot, ranks it at the index, and posts it to the feed', async () => {
+    await useSpotsStore.getState().addSpot(
+      {
+        name: 'My Backyard',
+        category: 'backyard',
+        access: 'friends',
+        distanceMi: 0,
+        location: '',
+        image: 'x.jpg',
+        characteristicIds: [],
+      },
+      0,
+    );
+    const mine = useSpotsStore.getState().mine;
+    expect(mine[0].name).toBe('My Backyard');
+    expect(mine[0].id).toBeTruthy();
+    expect(mine[0].score).toBe(9.6); // top of the band (it's the only/first spot)
+    expect(
+      useFeedStore
+        .getState()
+        .items.some((i) => i.kind === 'ranked' && i.spotName === 'My Backyard'),
+    ).toBe(true);
   });
 });
 

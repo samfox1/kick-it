@@ -7,13 +7,20 @@ import type { Member } from '@/domain/models';
 interface CrewState {
   members: Member[];
   requests: Member[];
+  /** Ids of people you've invited (outgoing, pending). A backend would POST an invite. */
+  invited: string[];
   acceptRequest: (id: string) => void;
   denyRequest: (id: string) => void;
+  invite: (member: Member) => void;
 }
 
 export const useCrewStore = create<CrewState>((set) => ({
   members: CREW,
   requests: CREW_REQUESTS,
+  invited: [],
+
+  invite: (member) =>
+    set((s) => (s.invited.includes(member.id) ? s : { invited: [...s.invited, member.id] })),
 
   acceptRequest: (id) =>
     set((s) => {
