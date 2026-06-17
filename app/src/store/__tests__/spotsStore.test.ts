@@ -2,7 +2,7 @@ import { useSpotsStore } from '../spotsStore';
 import { makeSpot } from '../../test-utils/factories';
 
 describe('spotsStore saved collection', () => {
-  beforeEach(() => useSpotsStore.setState({ saved: [] }));
+  beforeEach(() => useSpotsStore.setState({ saved: [], mine: [] }));
 
   it('saveSpot adds a spot to your saved collection', () => {
     useSpotsStore.getState().saveSpot(makeSpot({ id: 'a' }));
@@ -27,6 +27,12 @@ describe('spotsStore saved collection', () => {
     useSpotsStore.getState().saveSpot(makeSpot({ id: 'a' }));
     expect(useSpotsStore.getState().isSaved('a')).toBe(true);
   });
+
+  it('saveSpot is a no-op for an already-ranked spot (saved ∩ mine stays empty)', () => {
+    useSpotsStore.setState({ mine: [makeSpot({ id: 'a' })] });
+    useSpotsStore.getState().saveSpot(makeSpot({ id: 'a' }));
+    expect(useSpotsStore.getState().saved).toEqual([]);
+  });
 });
 
 describe('spotsStore.rankSpot', () => {
@@ -44,6 +50,14 @@ describe('spotsStore.rankSpot', () => {
     const mine = useSpotsStore.getState().mine.filter((s) => s.id === 'a');
     expect(mine).toHaveLength(1);
     expect(mine[0].score).toBe(9.1);
+  });
+
+  it('clamps an out-of-range score to 0–10', () => {
+    useSpotsStore.getState().rankSpot(makeSpot({ id: 'hi' }), 42);
+    useSpotsStore.getState().rankSpot(makeSpot({ id: 'lo' }), -5);
+    const mine = useSpotsStore.getState().mine;
+    expect(mine.find((s) => s.id === 'hi')?.score).toBe(10);
+    expect(mine.find((s) => s.id === 'lo')?.score).toBe(0);
   });
 
   it('promotes a saved spot out of saved when ranked', () => {

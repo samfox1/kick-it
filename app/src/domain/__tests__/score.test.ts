@@ -1,4 +1,17 @@
-import { scoreColor } from '../score';
+import { clampScore, scoreColor } from '../score';
+
+describe('clampScore', () => {
+  it('passes through in-range scores', () => {
+    expect(clampScore(0)).toBe(0);
+    expect(clampScore(7.3)).toBe(7.3);
+    expect(clampScore(10)).toBe(10);
+  });
+
+  it('clamps below 0 and above 10', () => {
+    expect(clampScore(-3)).toBe(0);
+    expect(clampScore(13)).toBe(10);
+  });
+});
 
 describe('scoreColor', () => {
   it('maps 0 to pure red (hue 0)', () => {

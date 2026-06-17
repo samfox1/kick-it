@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { createDefaultSpotRepository } from '@/data/mock/seed';
 import type { SpotRepository } from '@/data/SpotRepository';
 import type { Preferences, Spot } from '@/domain/models';
+import { clampScore } from '@/domain/score';
 
 /** The single seam to data. Swap this for a backed repository later — store/screens unchanged. */
 const repo: SpotRepository = createDefaultSpotRepository();
@@ -69,7 +70,12 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
     }),
 
   saveSpot: (spot) =>
-    set((s) => (s.saved.some((m) => m.id === spot.id) ? s : { saved: [...s.saved, spot] })),
+    set((s) => {
+      // Invariant: a spot is in at most one of saved/mine. Already-ranked or
+      // already-saved spots are left alone (saved ∩ mine stays empty).
+      const exists = s.saved.some((m) => m.id === spot.id) || s.mine.some((m) => m.id === spot.id);
+      return exists ? s : { saved: [...s.saved, spot] };
+    }),
 
   unsaveSpot: (id) => set((s) => ({ saved: s.saved.filter((m) => m.id !== id) })),
 
@@ -77,7 +83,7 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
 
   rankSpot: (spot, score) =>
     set((s) => ({
-      mine: [...s.mine.filter((m) => m.id !== spot.id), { ...spot, score }],
+      mine: [...s.mine.filter((m) => m.id !== spot.id), { ...spot, score: clampScore(score) }],
       saved: s.saved.filter((m) => m.id !== spot.id),
     })),
 }));
