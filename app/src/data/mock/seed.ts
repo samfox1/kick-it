@@ -1,0 +1,167 @@
+import type { Spot } from '../../domain/models';
+import { MockSpotRepository, type SpotSeed } from '../MockSpotRepository';
+import type { SpotRepository } from '../SpotRepository';
+
+const img = (seed: string) => `https://picsum.photos/seed/${seed}/600/400`;
+
+/** Spots the current user has saved/ranked (their crew's map). */
+const mine: Spot[] = [
+  {
+    id: 'pontoon',
+    name: "Uncle Rick's Pontoon",
+    category: 'on water',
+    access: 'invite',
+    score: 9.6,
+    distanceMi: 8,
+    location: 'Lake Mendota',
+    lat: 43.1097,
+    lng: -89.4206,
+    image: img('pontoon7'),
+    images: [img('pontoon7'), img('pontoon-deck'), img('pontoon-sunset'), img('pontoon-cooler')],
+    description:
+      "Rick's 24-footer. Pull out past the point, cut the engine, and the bay is yours. Bring a cooler — the fridge is small. Cell service drops near the island (feature, not a bug).",
+    characteristicIds: [
+      'water',
+      'sunset',
+      'private',
+      'cannabis',
+      'loud',
+      'aux',
+      'byob',
+      'free',
+      'biggroup',
+    ],
+  },
+  {
+    id: 'basement',
+    name: "Joey's Basement",
+    category: 'basement',
+    access: 'friends',
+    score: 9.2,
+    distanceMi: 2,
+    location: 'Near campus',
+    lat: 43.0733,
+    lng: -89.4009,
+    image: img('basement4'),
+    images: [img('basement4'), img('basement-couch'), img('basement-setup')],
+    characteristicIds: ['aux', 'charging', 'private', 'cannabis'],
+  },
+  {
+    id: 'rooftop',
+    name: "Marcus's Rooftop",
+    category: 'rooftop',
+    access: 'friends',
+    score: 8.9,
+    distanceMi: 3,
+    location: 'Eastside',
+    lat: 43.0738,
+    lng: -89.4015,
+    image: img('rooftop9'),
+    images: [img('rooftop9'), img('rooftop-skyline'), img('rooftop-lights'), img('rooftop-couch')],
+    characteristicIds: ['charging', 'cannabis', 'view', 'aux'],
+  },
+  {
+    id: 'firepit',
+    name: "Nia's Firepit",
+    category: 'backyard',
+    access: 'friends',
+    score: 8.7,
+    distanceMi: 4,
+    location: 'Northside',
+    lat: 43.076,
+    lng: -89.403,
+    image: img('firepit3'),
+    characteristicIds: ['loud', 'biggroup', 'dog'],
+  },
+  {
+    id: 'tinroof',
+    name: 'The Tin Roof Patio',
+    category: 'bar patio',
+    access: 'open',
+    score: 8.4,
+    distanceMi: 1.1,
+    location: 'Downtown',
+    lat: 43.0731,
+    lng: -89.4002,
+    image: img('tinroof2'),
+    characteristicIds: ['food', 'aux', 'shaded', 'parking'],
+  },
+  {
+    id: 'cedar',
+    name: 'Cedar Bench by the Oak',
+    category: 'park',
+    access: 'open',
+    score: 7.8,
+    distanceMi: 0.4,
+    location: 'Cedar Park',
+    lat: 43.0735,
+    lng: -89.4012,
+    image: img('cedarbench8'),
+    characteristicIds: ['sunset', 'free', 'shaded'],
+  },
+];
+
+/** Public + nearby spots to discover. */
+const local: Spot[] = [
+  {
+    id: 'cedar',
+    name: 'Cedar Bench by the Oak',
+    category: 'park',
+    access: 'open',
+    score: 7.8,
+    distanceMi: 0.4,
+    location: 'Cedar Park',
+    lat: 43.0735,
+    lng: -89.4012,
+    image: img('cedarbench8'),
+    characteristicIds: ['sunset', 'free', 'shaded'],
+  },
+  {
+    id: 'tinroof',
+    name: 'The Tin Roof Patio',
+    category: 'bar patio',
+    access: 'open',
+    score: 8.4,
+    distanceMi: 1.1,
+    location: 'Downtown',
+    lat: 43.0731,
+    lng: -89.4002,
+    image: img('tinroof2'),
+    images: [img('tinroof2'), img('tinroof-bar'), img('tinroof-night')],
+    characteristicIds: ['food', 'aux', 'shaded', 'parking'],
+  },
+  {
+    id: 'dock',
+    name: 'The Loading Dock',
+    category: 'lot',
+    access: 'invite',
+    score: 6.2,
+    distanceMi: 2.3,
+    location: 'Warehouse district',
+    lat: 43.0728,
+    lng: -89.402,
+    image: img('dock5'),
+    characteristicIds: ['loud', 'openlate', 'biggroup'],
+  },
+  {
+    id: 'riverwalk',
+    name: 'Riverwalk Steps',
+    category: 'waterfront',
+    access: 'open',
+    score: 7.1,
+    distanceMi: 1.6,
+    location: 'Riverfront',
+    lat: 43.0745,
+    lng: -89.4012,
+    image: img('riverwalk1'),
+    images: [img('riverwalk1'), img('riverwalk-steps'), img('riverwalk-dusk')],
+    characteristicIds: ['water', 'free', 'sunset'],
+  },
+];
+
+export const SEED: SpotSeed = { local, mine };
+
+/** The app's default repository: an in-memory mock over the seed. */
+export function createDefaultSpotRepository(): SpotRepository {
+  return new MockSpotRepository(SEED);
+}
