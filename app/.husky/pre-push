@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Run the test suite before pushing.
+cd app || exit 1
+npm test -- --passWithNoTests

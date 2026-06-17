@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Hooks live in app/.husky; git runs them from the repo root. Work inside the app.
+cd app || exit 1
+npx lint-staged && npm run typecheck
