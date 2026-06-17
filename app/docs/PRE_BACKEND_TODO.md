@@ -54,19 +54,20 @@ store tests) are already done. What remains is below.
 
 ## 4. Model invariants to make structural
 
-- **`saved ∩ mine` should be empty**, but the rule lives only inside `rankSpot`;
-  `saveSpot` could re-add a ranked spot. Make `saveSpot` reject ids already in
-  `mine`, or model one tagged list (`status: 'local' | 'saved' | 'ranked'`).
-  `src/store/spotsStore.ts`.
-- **Score range unenforced.** `rankSpot(spot, score: number)` and `Spot.score`
-  accept any number; `scoreColor` already clamps defensively, proving the range
-  isn't guaranteed. Clamp/validate at the write boundary (consider a `Score` smart
-  constructor). `src/store/spotsStore.ts`, `src/domain/models.ts`.
+- ~~**`saved ∩ mine` should be empty.**~~ ✅ Done (branch `feat/model-invariants`).
+  `saveSpot` is now a no-op when the id is already in `mine`, so the two
+  collections stay disjoint regardless of call order.
+- ~~**Score range unenforced.**~~ ✅ Done (same branch). `clampScore` (`domain/score.ts`)
+  is applied at the write boundary in `rankSpot`; `scoreColor` reuses it.
 - **Untyped id references** (`Spot.id`, `Hang.spotId`, `Member.id`,
   `characteristicIds`) are bare `string` — no referential integrity. Consider
   branded id types before the backend introduces FK mismatches. `src/domain/models.ts`.
+  _Deferred: large mechanical churn across the codebase; best decided alongside the
+  backend schema so the brands match real key types._
 - **Independently-optional coordinates** (`lat?`/`lng?`) allow a half-coordinate.
   Replace with `coords?: { lat; lng }`. `src/domain/models.ts`.
+  _Deferred: touches 12 seed entries + map/dedupe call sites, and the shape will be
+  revisited when the real geo/map SDK lands (see PLAN.md §7)._
 
 ## 5. Reactions don't persist (becomes a silent no-op with a backend)
 
