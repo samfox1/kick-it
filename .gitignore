@@ -4,3 +4,6 @@
 # Local tooling / scratch
 .claude/
 variations.json
+
+# Supabase CLI local link metadata
+supabase/.temp/
