@@ -3,6 +3,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react-native
 import { makeHang } from '@/test-utils/factories';
 import { useCrewStore } from '@/store/crewStore';
 import { useHangsStore } from '@/store/hangsStore';
+import { useProfileStore } from '@/store/profileStore';
 import { HangCard } from '../HangCard';
 
 jest.mock('expo-image', () => ({ Image: 'Image' }));
@@ -18,6 +19,10 @@ describe('HangCard reactions', () => {
   beforeEach(() => {
     useHangsStore.setState({ reactions: {} });
     useCrewStore.setState({ invited: [] });
+    useProfileStore.setState({
+      member: { id: 'sam', name: 'Sam Fox', initial: 'S' },
+      handle: '@samkicks',
+    });
   });
 
   it('shows the heart count from hang.likes and toggles it by one', () => {
@@ -55,6 +60,23 @@ describe('HangCard reactions', () => {
 
     render(<HangCard hang={hang} />);
     expect(reactionCount('React heart')).toBe(3); // still on after remount
+  });
+
+  it('shows your live profile name on your own hangs (a rename updates them)', () => {
+    useProfileStore.setState({
+      member: { id: 'sam', name: 'Renamed Sam', initial: 'R' },
+      handle: '@samkicks',
+    });
+    render(<HangCard hang={makeHang({ author: { id: 'sam', name: 'Old Name', initial: 'O' } })} />);
+    expect(screen.getByText('Renamed Sam')).toBeOnTheScreen();
+    expect(screen.queryByText('Old Name')).not.toBeOnTheScreen();
+  });
+
+  it("leaves other people's hang author names alone", () => {
+    render(
+      <HangCard hang={makeHang({ author: { id: 'marcus', name: 'Marcus', initial: 'M' } })} />,
+    );
+    expect(screen.getByText('Marcus')).toBeOnTheScreen();
   });
 
   it('collapses the avatar stack to "+N" past the visible cap', () => {

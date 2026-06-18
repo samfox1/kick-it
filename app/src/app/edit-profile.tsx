@@ -13,14 +13,22 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CURRENT_USER } from '@/data/mock/profile';
+import { useProfileStore } from '@/store/profileStore';
 import { accentRamp, colors, font, hardShadow, inkBorder, radii } from '@/theme/tokens';
 import { Avatar } from '@/ui/Avatar';
 
 export default function EditProfileScreen() {
   const router = useRouter();
-  const [name, setName] = useState(CURRENT_USER.name);
-  const [handle, setHandle] = useState(CURRENT_USER.handle);
+  const member = useProfileStore((s) => s.member);
+  const currentHandle = useProfileStore((s) => s.handle);
+  const updateProfile = useProfileStore((s) => s.updateProfile);
+  const [name, setName] = useState(member.name);
+  const [handle, setHandle] = useState(currentHandle);
+
+  const save = () => {
+    updateProfile({ name: name.trim() || member.name, handle: handle.trim() || currentHandle });
+    router.back();
+  };
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
@@ -42,7 +50,7 @@ export default function EditProfileScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.avatarWrap}>
-            <Avatar label={CURRENT_USER.initial} color={accentRamp[0]} size={84} />
+            <Avatar label={member.initial} color={accentRamp[0]} size={84} />
             <Pressable style={styles.changePhoto}>
               <Text style={styles.changePhotoText}>Change photo</Text>
             </Pressable>
@@ -59,7 +67,7 @@ export default function EditProfileScreen() {
             autoCapitalize="none"
           />
 
-          <Pressable style={styles.saveBtn} onPress={() => router.back()}>
+          <Pressable style={styles.saveBtn} onPress={save}>
             <Text style={styles.saveText}>Save</Text>
           </Pressable>
         </ScrollView>

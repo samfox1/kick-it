@@ -1,0 +1,34 @@
+import { create } from 'zustand';
+
+import { CURRENT_MEMBER, CURRENT_USER } from '@/data/mock/profile';
+import type { Member } from '@/domain/models';
+
+/**
+ * The current user's editable profile. Seeded from the mock user; a backend would
+ * hydrate and persist this. Lives in a store so edits show everywhere (profile
+ * header, and as the author of new hangs/rankings).
+ */
+interface ProfileState {
+  member: Member;
+  handle: string;
+  updateProfile: (patch: { name?: string; handle?: string }) => void;
+}
+
+export const useProfileStore = create<ProfileState>((set) => ({
+  member: CURRENT_MEMBER,
+  handle: CURRENT_USER.handle,
+  updateProfile: ({ name, handle }) =>
+    set((s) => {
+      const trimmedName = name?.trim();
+      const trimmedHandle = handle?.trim();
+      return {
+        member: trimmedName
+          ? { ...s.member, name: trimmedName, initial: trimmedName[0].toUpperCase() }
+          : s.member,
+        handle: trimmedHandle || s.handle,
+      };
+    }),
+}));
+
+/** Whether `id` is the current user — the single place that answers "is this me?". */
+export const isMe = (id: string): boolean => useProfileStore.getState().member.id === id;

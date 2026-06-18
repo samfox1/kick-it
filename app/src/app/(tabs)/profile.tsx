@@ -4,9 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CURRENT_USER } from '@/data/mock/profile';
 import { SEED } from '@/data/mock/seed';
 import { useHangDelete } from '@/lib/useHangDelete';
+import { useProfileStore } from '@/store/profileStore';
 import { useHideOnScroll } from '@/lib/useHideOnScroll';
 import { useCrewStore } from '@/store/crewStore';
 import { useHangsStore } from '@/store/hangsStore';
@@ -33,10 +33,11 @@ type Tab = 'saved' | 'hangs';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const profile = useProfileStore();
   const { saved, local, mine, loaded, load } = useSpotsStore();
   const members = useCrewStore((s) => s.members);
   const requests = useCrewStore((s) => s.requests);
-  const myHangs = useHangsStore((s) => s.hangs).filter((h) => h.author.id === CURRENT_USER.id);
+  const myHangs = useHangsStore((s) => s.hangs).filter((h) => h.author.id === profile.member.id);
   const { requestDelete, confirmProps } = useHangDelete();
   const [tab, setTab] = useState<Tab>('saved');
   const onScroll = useHideOnScroll();
@@ -62,10 +63,10 @@ export default function ProfileScreen() {
         scrollEventThrottle={16}
       >
         <View style={styles.profileRow}>
-          <Avatar label={CURRENT_USER.initial} color={accentRamp[0]} size={56} />
+          <Avatar label={profile.member.initial} color={accentRamp[0]} size={56} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{CURRENT_USER.name}</Text>
-            <Text style={styles.handle}>{CURRENT_USER.handle}</Text>
+            <Text style={styles.name}>{profile.member.name}</Text>
+            <Text style={styles.handle}>{profile.handle}</Text>
           </View>
           <Pressable
             style={({ pressed }) => [styles.ico, pressed && pressedStyle]}

@@ -4,11 +4,11 @@ import type { LucideIcon } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { CURRENT_USER } from '@/data/mock/profile';
 import type { Hang, Member, ReactionKey } from '@/domain/models';
 import { haptics } from '@/lib/haptics';
 import { useCrewStore } from '@/store/crewStore';
 import { useHangsStore } from '@/store/hangsStore';
+import { useProfileStore } from '@/store/profileStore';
 import { colors, font, inkBorder, pressedStyle, radii } from '@/theme/tokens';
 import { AttendeesModal, type AttendeeRow } from '@/ui/AttendeesModal';
 import { Avatar, memberColor } from '@/ui/Avatar';
@@ -58,6 +58,9 @@ export function HangCard({
     toggleReaction(hang.id, key);
   };
 
+  // Show your live profile identity on your own hangs, so a rename updates them.
+  const me = useProfileStore((s) => s.member);
+  const author = hang.author.id === me.id ? me : hang.author;
   const crew = useCrewStore((s) => s.members);
   const invitedIds = useCrewStore((s) => s.invited);
   const sendInvite = useCrewStore((s) => s.invite);
@@ -67,7 +70,7 @@ export function HangCard({
 
   const attendeeRows: AttendeeRow[] = hang.attendees.map((m) => {
     let status: AttendeeRow['status'];
-    if (m.id === CURRENT_USER.id) status = 'you';
+    if (m.id === me.id) status = 'you';
     else if (crew.some((c) => c.id === m.id)) status = 'friend';
     else if (invitedIds.includes(m.id)) status = 'invited';
     else status = 'invitable';
@@ -82,10 +85,10 @@ export function HangCard({
   return (
     <View style={styles.card}>
       <View style={styles.posterRow}>
-        <Avatar label={hang.author.initial} color={memberColor(hang.author)} size={40} />
+        <Avatar label={author.initial} color={memberColor(author)} size={40} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={styles.poster} numberOfLines={1}>
-            {hang.author.name}
+            {author.name}
           </Text>
           <Text style={styles.when}>{hang.when}</Text>
         </View>
