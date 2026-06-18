@@ -62,25 +62,36 @@ describe('Add screen (new spot)', () => {
 });
 
 describe('Add screen (creating a spot)', () => {
-  it('persists the new spot and posts a ranking when you finish', async () => {
+  it('persists the new spot (with description + first hang) and posts a ranking', async () => {
     useSpotsStore.setState({ mine: [], local: [], saved: [], loaded: true, error: null });
     useFeedStore.setState({ items: [], loaded: true, error: null });
+    useHangsStore.setState({ hangs: [], reactions: {} });
     renderScreen();
 
     fireEvent.changeText(screen.getByPlaceholderText("Nia's Firepit"), 'My Backyard');
     fireEvent.press(screen.getByText('Continue')); // → access
     fireEvent.press(screen.getByText('Continue')); // → characteristics
     fireEvent.press(screen.getByText('Continue')); // → describe
+    fireEvent.changeText(screen.getByPlaceholderText('What makes this spot good?'), 'Chill vibes');
+    fireEvent.changeText(screen.getByPlaceholderText('One line about tonight…'), 'First bonfire');
     fireEvent.press(screen.getByText('Finish up')); // → rank (empty list resolves instantly)
     fireEvent.press(await screen.findByText('Done'));
 
     await waitFor(() =>
       expect(useSpotsStore.getState().mine.some((s) => s.name === 'My Backyard')).toBe(true),
     );
+    const spot = useSpotsStore.getState().mine.find((s) => s.name === 'My Backyard');
+    expect(spot?.description).toBe('Chill vibes');
     expect(
       useFeedStore
         .getState()
         .items.some((i) => i.kind === 'ranked' && i.spotName === 'My Backyard'),
+    ).toBe(true);
+    // The optional first hang was logged at the new spot.
+    expect(
+      useHangsStore
+        .getState()
+        .hangs.some((h) => h.spotId === spot?.id && h.note === 'First bonfire'),
     ).toBe(true);
   });
 });

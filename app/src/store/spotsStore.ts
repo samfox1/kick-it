@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 
-import { CURRENT_MEMBER } from '@/data/mock/profile';
 import { createDefaultSpotRepository } from '@/data/mock/seed';
 import type { SpotRepository } from '@/data/SpotRepository';
 import type { Result } from '@/data/result';
@@ -8,6 +7,7 @@ import { rankingToFeedItem } from '@/domain/feedItem';
 import type { NewSpot, Preferences, Spot } from '@/domain/models';
 import { applyRankScores, sortByScoreDesc } from '@/domain/ranking';
 import { useFeedStore } from '@/store/feedStore';
+import { useProfileStore } from '@/store/profileStore';
 
 /** The single seam to data. Swap this for a backed repository later — store/screens unchanged. */
 const repo: SpotRepository = createDefaultSpotRepository();
@@ -41,6 +41,9 @@ interface SpotsState {
   reorderMine: (ordered: Spot[]) => void;
   /** Create a brand-new spot (id from the repo), then rank it at `index`. */
   addSpot: (draft: NewSpot, index: number) => Promise<Result<Spot>>;
+  /** The user's own characteristic endorsements, keyed by spot id then characteristic id. */
+  endorsements: Record<string, Record<string, boolean>>;
+  toggleEndorsement: (spotId: string, characteristicId: string) => void;
 }
 
 export const useSpotsStore = create<SpotsState>((set, get) => ({
@@ -51,6 +54,7 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
   preferences: { maxDistanceMi: 5, nonNegotiables: [] },
   loaded: false,
   error: null,
+  endorsements: {},
 
   load: async () => {
     const [localRes, mineRes] = await Promise.all([repo.listLocal(), repo.listMine()]);
@@ -104,7 +108,9 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
     if (isFirstTime) {
       const ranked = mine.find((m) => m.id === spot.id);
       if (ranked)
-        useFeedStore.getState().prepend(rankingToFeedItem(CURRENT_MEMBER, ranked, clamped + 1));
+        useFeedStore
+          .getState()
+          .prepend(rankingToFeedItem(useProfileStore.getState().member, ranked, clamped + 1));
     }
   },
 
@@ -115,4 +121,15 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
     if (res.ok) get().rankSpot(res.value, index);
     return res;
   },
+
+  toggleEndorsement: (spotId, characteristicId) =>
+    set((s) => {
+      const current = s.endorsements[spotId] ?? {};
+      return {
+        endorsements: {
+          ...s.endorsements,
+          [spotId]: { ...current, [characteristicId]: !current[characteristicId] },
+        },
+      };
+    }),
 }));

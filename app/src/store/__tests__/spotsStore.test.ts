@@ -153,6 +153,24 @@ describe('spotsStore.reorderMine', () => {
   });
 });
 
+describe('spotsStore endorsements', () => {
+  beforeEach(() => useSpotsStore.setState({ endorsements: {} }));
+
+  it('toggleEndorsement flips a characteristic endorsement on and off', () => {
+    useSpotsStore.getState().toggleEndorsement('pontoon', 'aux');
+    expect(useSpotsStore.getState().endorsements.pontoon?.aux).toBe(true);
+    useSpotsStore.getState().toggleEndorsement('pontoon', 'aux');
+    expect(useSpotsStore.getState().endorsements.pontoon?.aux).toBe(false);
+  });
+
+  it('tracks endorsements per spot and per characteristic independently', () => {
+    useSpotsStore.getState().toggleEndorsement('pontoon', 'aux');
+    useSpotsStore.getState().toggleEndorsement('rooftop', 'view');
+    expect(useSpotsStore.getState().endorsements.pontoon).toEqual({ aux: true });
+    expect(useSpotsStore.getState().endorsements.rooftop).toEqual({ view: true });
+  });
+});
+
 describe('spotsStore edge cases', () => {
   beforeEach(() => useSpotsStore.setState({ saved: [], mine: [] }));
 

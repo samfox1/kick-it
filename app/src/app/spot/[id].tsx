@@ -1,10 +1,10 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Bookmark, ChevronLeft, ListOrdered, Plus, Waves } from 'lucide-react-native';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CURRENT_USER } from '@/data/mock/profile';
+import { isMe } from '@/store/profileStore';
 import { spotGallery } from '@/domain/models';
 import { haptics } from '@/lib/haptics';
 import { useHangDelete } from '@/lib/useHangDelete';
@@ -41,7 +41,8 @@ export default function SpotDetailScreen() {
   const allHangs = useHangsStore((s) => s.hangs);
   const hangs = allHangs.filter((h) => h.spotId === id);
   const { requestDelete, confirmProps } = useHangDelete();
-  const [endorsed, setEndorsed] = useState<Record<string, boolean>>({});
+  const endorsements = useSpotsStore((s) => s.endorsements);
+  const toggleEndorsement = useSpotsStore((s) => s.toggleEndorsement);
   const scrollY = useRef(new Animated.Value(0)).current;
 
   if (loading) {
@@ -64,7 +65,7 @@ export default function SpotDetailScreen() {
     );
   }
 
-  const toggle = (cid: string) => setEndorsed((e) => ({ ...e, [cid]: !e[cid] }));
+  const myEndorsements = endorsements[spot.id];
   const isSaved = savedSpots.some((s) => s.id === spot.id);
   const isRanked = mine.some((s) => s.id === spot.id);
   const toggleSave = () => {
@@ -171,14 +172,14 @@ export default function SpotDetailScreen() {
           <Text style={styles.sub}>Tap a badge to endorse what&apos;s true.</Text>
           <View style={styles.badges}>
             {spot.characteristicIds.map((cid) => {
-              const on = !!endorsed[cid];
+              const on = !!myEndorsements?.[cid];
               return (
                 <CategoryBadge
                   key={cid}
                   id={cid}
                   count={(spot.vouchCounts?.[cid] ?? 0) + (on ? 1 : 0)}
                   endorsed={on}
-                  onPress={() => toggle(cid)}
+                  onPress={() => toggleEndorsement(spot.id, cid)}
                 />
               );
             })}
@@ -196,7 +197,7 @@ export default function SpotDetailScreen() {
             <Text style={styles.logBtnText}>Log a hang here</Text>
           </Pressable>
           {hangs.map((h) => {
-            const mineHang = h.author.id === CURRENT_USER.id;
+            const mineHang = isMe(h.author.id);
             return (
               <HangCard
                 key={h.id}

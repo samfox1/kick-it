@@ -19,7 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { findDuplicateCandidates } from '@/domain/dedupe';
 import { exploreCatalog } from '@/domain/exploreView';
-import { CURRENT_MEMBER } from '@/data/mock/profile';
+import { useProfileStore } from '@/store/profileStore';
 import type { AccessLevel } from '@/domain/models';
 import { insertIndex, nextComparisonIndex } from '@/domain/rankInsert';
 import { scoreFromRank } from '@/domain/ranking';
@@ -63,6 +63,7 @@ export default function AddScreen() {
   const { local, mine, loaded, load } = useSpotsStore();
   const addSpot = useSpotsStore((s) => s.addSpot);
   const logHang = useHangsStore((s) => s.logHang);
+  const me = useProfileStore((s) => s.member);
   useEffect(() => {
     if (!loaded) void load();
   }, [loaded, load]);
@@ -80,6 +81,8 @@ export default function AddScreen() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [hangTitle, setHangTitle] = useState('');
   const [hangNote, setHangNote] = useState('');
+  const [description, setDescription] = useState('');
+  const [firstHang, setFirstHang] = useState('');
   const [draftLoc, setDraftLoc] = useState<{ lat: number; lng: number } | null>(null);
 
   const lastStep = intendsHang ? 2 : 5;
@@ -116,7 +119,7 @@ export default function AddScreen() {
     if (spotId) {
       const res = await logHang({
         spotId,
-        author: CURRENT_MEMBER,
+        author: me,
         title: hangTitle.trim() || 'Untitled hang',
         note: hangNote.trim(),
         image: photos[0] ?? '',
@@ -138,12 +141,26 @@ export default function AddScreen() {
         image: photos[0] ?? '',
         images: photos,
         characteristicIds: Object.keys(tags).filter((id) => tags[id]),
+        description: description.trim() || undefined,
         lat: draftLoc?.lat,
         lng: draftLoc?.lng,
       },
       finalIndex,
     );
-    if (res.ok) router.back();
+    if (!res.ok) return;
+    // Optionally log the first hang at the brand-new spot (no photo of its own yet).
+    if (firstHang.trim()) {
+      const hangRes = await logHang({
+        spotId: res.value.id,
+        author: me,
+        title: 'First hang',
+        note: firstHang.trim(),
+        image: '',
+        attendees: [],
+      });
+      if (!hangRes.ok) return; // spot saved; surface the hang failure instead of pretending success
+    }
+    router.back();
   };
 
   const addFromCamera = async () => {
@@ -398,6 +415,8 @@ export default function AddScreen() {
               <Text style={styles.label}>Describe the vibe</Text>
               <TextInput
                 style={[styles.field, styles.fieldArea]}
+                value={description}
+                onChangeText={setDescription}
                 multiline
                 placeholder="What makes this spot good?"
                 placeholderTextColor={colors.muted2}
@@ -405,6 +424,8 @@ export default function AddScreen() {
               <Text style={styles.label}>Log your first hang (optional)</Text>
               <TextInput
                 style={styles.field}
+                value={firstHang}
+                onChangeText={setFirstHang}
                 placeholder="One line about tonight…"
                 placeholderTextColor={colors.muted2}
               />
