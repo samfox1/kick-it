@@ -9,6 +9,7 @@ import { visibleFeed } from '@/domain/feedView';
 import type { FeedItem } from '@/domain/models';
 import { hangCountForSpot } from '@/domain/spotStats';
 import { useCrewStore } from '@/store/crewStore';
+import { useProfileStore } from '@/store/profileStore';
 
 const repo: FeedRepository = createDefaultFeedRepository();
 
@@ -46,7 +47,10 @@ export const useFeedStore = create<FeedState>((set) => ({
       set({ loaded: true, error: res.error.message });
       return;
     }
-    const friendIds = crewFriendIds(useCrewStore.getState().members);
+    const friendIds = crewFriendIds(
+      useProfileStore.getState().member.id,
+      useCrewStore.getState().members,
+    );
     set({ items: withStats(visibleFeed(res.value.items, friendIds)), loaded: true, error: null });
   },
 }));

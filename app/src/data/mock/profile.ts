@@ -22,8 +22,9 @@ export const CREW_REQUESTS: Member[] = [
   { id: 'priya', name: 'Priya', initial: 'P' },
 ];
 
-/** Ids whose private (friends/invite) posts you can see: your crew + you. */
-export const crewFriendIds = (members: Member[]): string[] => [
-  CURRENT_USER.id,
+/** Ids whose private (friends/invite) posts you can see: your crew + you.
+ *  `selfId` is the current identity (the hydrated auth user, not a hardcoded mock id). */
+export const crewFriendIds = (selfId: string, members: Member[]): string[] => [
+  selfId,
   ...members.map((m) => m.id),
 ];

@@ -44,8 +44,15 @@ are written (or to pre-launch hardening). Resolve them alongside the relevant re
   and `loadMyReactions` hydrates them (verified live). Cascades on hang delete.
 - TODO (multi-user): `Hang.likes` base is still 0 in the mapper — fine for one user (count =
   your own heart), but aggregate other users' heart counts once there are other users.
-- NOTE: with the flag on, **feed + crew are still mock**, so identity hydration makes some
-  seeded feed/crew "you" attribution cosmetically off until those cut over.
+- NOTE: with the flag on, **feed is still mock** (cut over next). Feed visibility now uses the
+  hydrated identity (`crewFriendIds(selfId, ...)`), so your own friends-only items show.
+
+## Crew — deferred by design
+- Crew is inherently multi-user; with a single real account a faithful cutover is an empty
+  crew (accept/deny/invite have no one to act on). Kept as local display data until there is
+  real signup/auth for friends. Identity wiring is fixed (feed uses the hydrated user, not a
+  hardcoded mock id). When real users exist: persist crew_members/crew_requests + make hang
+  attendees reference real profiles (the snapshot can carry an optional member_id then).
 
 ## FeedRepository (the hardest)
 - **`activity` is under-denormalized** — it stores only ids + `rank`. Building
