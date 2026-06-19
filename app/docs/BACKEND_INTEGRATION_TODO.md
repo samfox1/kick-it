@@ -40,9 +40,10 @@ are written (or to pre-launch hardening). Resolve them alongside the relevant re
 - DONE: `logHang`/`listForSpot`/`listMine`/`deleteHang`/`updateHang` persist (verified live).
   Attendees are a denormalized jsonb snapshot (0003); identity is hydrated so your hangs stay
   yours. Hang store loads per-spot (spot screen) and mine (profile) and merges by id.
-- TODO: **reactions/likes not persisted** — `toggleReaction` is still in-memory and
-  `Hang.likes` is hard-coded to 0 in the mapper. Add a `reactions` read/write path (toggle +
-  count heart reactions for `likes`).
+- DONE: **your reactions persist** — `toggleReaction` write-throughs to the `reactions` table
+  and `loadMyReactions` hydrates them (verified live). Cascades on hang delete.
+- TODO (multi-user): `Hang.likes` base is still 0 in the mapper — fine for one user (count =
+  your own heart), but aggregate other users' heart counts once there are other users.
 - NOTE: with the flag on, **feed + crew are still mock**, so identity hydration makes some
   seeded feed/crew "you" attribution cosmetically off until those cut over.
 

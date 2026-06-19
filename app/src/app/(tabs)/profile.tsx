@@ -39,6 +39,7 @@ export default function ProfileScreen() {
   const requests = useCrewStore((s) => s.requests);
   const myHangs = useHangsStore((s) => s.hangs).filter((h) => h.author.id === profile.member.id);
   const loadMineHangs = useHangsStore((s) => s.loadMine);
+  const loadMyReactions = useHangsStore((s) => s.loadMyReactions);
   const { requestDelete, confirmProps } = useHangDelete();
   const [tab, setTab] = useState<Tab>('saved');
   const onScroll = useHideOnScroll();
@@ -57,7 +58,8 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     void loadMineHangs();
-  }, [loadMineHangs]);
+    void loadMyReactions();
+  }, [loadMineHangs, loadMyReactions]);
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>

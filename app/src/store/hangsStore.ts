@@ -30,6 +30,8 @@ interface HangsState {
   loadForSpot: (spotId: string) => Promise<void>;
   /** Load the current user's own hangs into the cache. */
   loadMine: () => Promise<void>;
+  /** Load the current user's reactions from the backend. */
+  loadMyReactions: () => Promise<void>;
   deleteHang: (id: string) => Promise<void>;
   updateHang: (id: string, patch: { title?: string; note?: string }) => Promise<void>;
   toggleReaction: (hangId: string, key: ReactionKey) => void;
@@ -37,7 +39,7 @@ interface HangsState {
   logHang: (draft: NewHang) => Promise<Result<Hang>>;
 }
 
-export const useHangsStore = create<HangsState>((set) => ({
+export const useHangsStore = create<HangsState>((set, get) => ({
   hangs: usingSupabase ? [] : [...HANGS],
   reactions: {},
 
@@ -49,6 +51,11 @@ export const useHangsStore = create<HangsState>((set) => ({
   loadMine: async () => {
     const res = await repo.listMine();
     if (res.ok) set((s) => ({ hangs: mergeHangs(s.hangs, res.value.items) }));
+  },
+
+  loadMyReactions: async () => {
+    const res = await repo.listMyReactions();
+    if (res.ok) set((s) => ({ reactions: { ...s.reactions, ...res.value } }));
   },
 
   deleteHang: async (id) => {
@@ -64,11 +71,13 @@ export const useHangsStore = create<HangsState>((set) => ({
     await repo.updateHang(id, patch);
   },
 
-  toggleReaction: (hangId, key) =>
-    set((s) => {
-      const current = s.reactions[hangId] ?? {};
-      return { reactions: { ...s.reactions, [hangId]: { ...current, [key]: !current[key] } } };
-    }),
+  toggleReaction: (hangId, key) => {
+    const on = !(get().reactions[hangId]?.[key] ?? false);
+    set((s) => ({
+      reactions: { ...s.reactions, [hangId]: { ...(s.reactions[hangId] ?? {}), [key]: on } },
+    }));
+    void repo.setReaction(hangId, key, on);
+  },
 
   logHang: async (draft) => {
     const res = await repo.logHang(draft);

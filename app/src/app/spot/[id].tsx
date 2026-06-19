@@ -40,10 +40,12 @@ export default function SpotDetailScreen() {
     fetchedSpot;
   const allHangs = useHangsStore((s) => s.hangs);
   const loadForSpot = useHangsStore((s) => s.loadForSpot);
+  const loadMyReactions = useHangsStore((s) => s.loadMyReactions);
   const hangs = allHangs.filter((h) => h.spotId === id);
   useEffect(() => {
     void loadForSpot(id);
-  }, [id, loadForSpot]);
+    void loadMyReactions();
+  }, [id, loadForSpot, loadMyReactions]);
   const { requestDelete, confirmProps } = useHangDelete();
   const endorsements = useSpotsStore((s) => s.endorsements);
   const toggleEndorsement = useSpotsStore((s) => s.toggleEndorsement);

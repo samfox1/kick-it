@@ -1,6 +1,6 @@
-import type { Hang, NewHang } from '../domain/models';
+import type { Hang, NewHang, ReactionKey } from '../domain/models';
 import { CURRENT_MEMBER } from './mock/profile';
-import type { HangRepository } from './HangRepository';
+import type { HangRepository, ReactionMap } from './HangRepository';
 import { makeIdGenerator } from './mockId';
 import { paginate, type Page, type PageParams } from './page';
 import { ok, type Result } from './result';
@@ -55,6 +55,15 @@ export class MockHangRepository implements HangRepository {
   async updateHang(id: string, patch: { title?: string; note?: string }): Promise<Result<void>> {
     const hang = this.hangs.find((h) => h.id === id);
     if (hang) Object.assign(hang, patch);
+    return ok(undefined);
+  }
+
+  // Reactions live in the store for the ephemeral mock; these are no-ops.
+  async listMyReactions(): Promise<Result<ReactionMap>> {
+    return ok({});
+  }
+
+  async setReaction(_hangId: string, _key: ReactionKey, _on: boolean): Promise<Result<void>> {
     return ok(undefined);
   }
 }
