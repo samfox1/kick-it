@@ -1,0 +1,74 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+import type { Page, PageParams } from '@/data/page';
+import { fail, ok, type Result } from '@/data/result';
+import type { SpotRepository } from '@/data/SpotRepository';
+import { applyRankScores } from '@/domain/ranking';
+import type { NewSpot, Spot } from '@/domain/models';
+import { failFrom } from './errors';
+import { rowToSpot, type SpotRow } from './mappers';
+
+const COLUMNS =
+  'id, name, category, access, location, lat, lng, image, images, characteristic_ids, description';
+
+/**
+ * Supabase-backed SpotRepository. The client is injected so this stays unit-testable
+ * and free of the RN-only client module.
+ *
+ * Pagination is single-page for now (the Page contract allows it); keyset paging and
+ * viewer-distance (`distanceMi`) are tracked in docs/BACKEND_INTEGRATION_TODO.md.
+ */
+export class SupabaseSpotRepository implements SpotRepository {
+  constructor(private readonly db: SupabaseClient) {}
+
+  async listLocal(_params?: PageParams): Promise<Result<Page<Spot>>> {
+    const { data, error } = await this.db.from('spots').select(COLUMNS).eq('access', 'open');
+    if (error) return failFrom(error);
+    return ok({ items: (data as SpotRow[]).map(rowToSpot) });
+  }
+
+  async listMine(_params?: PageParams): Promise<Result<Page<Spot>>> {
+    // Ranked list: rankings joined to spots, ordered by position; score is derived
+    // from position over the whole list (single page).
+    const { data, error } = await this.db
+      .from('rankings')
+      .select(`position, spots ( ${COLUMNS} )`)
+      .order('position', { ascending: true });
+    if (error) return failFrom(error);
+    const rows = (data ?? []) as unknown as { position: number; spots: SpotRow | null }[];
+    const spots = rows.filter((r) => r.spots).map((r) => rowToSpot(r.spots as SpotRow));
+    return ok({ items: applyRankScores(spots) });
+  }
+
+  async getById(id: string): Promise<Result<Spot | undefined>> {
+    const { data, error } = await this.db.from('spots').select(COLUMNS).eq('id', id).maybeSingle();
+    if (error) return failFrom(error);
+    return ok(data ? rowToSpot(data as SpotRow) : undefined);
+  }
+
+  async createSpot(input: NewSpot): Promise<Result<Spot>> {
+    const { data: userData } = await this.db.auth.getUser();
+    const creatorId = userData.user?.id;
+    if (!creatorId) return fail('unauthorized', 'Not signed in');
+
+    const { data, error } = await this.db
+      .from('spots')
+      .insert({
+        creator_id: creatorId,
+        name: input.name,
+        category: input.category,
+        access: input.access,
+        location: input.location,
+        lat: input.lat ?? null,
+        lng: input.lng ?? null,
+        image: input.image,
+        images: input.images ?? [],
+        characteristic_ids: input.characteristicIds,
+        description: input.description ?? null,
+      })
+      .select(COLUMNS)
+      .single();
+    if (error) return failFrom(error);
+    return ok(rowToSpot(data as SpotRow));
+  }
+}
