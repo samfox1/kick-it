@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { createDefaultSpotRepository } from '@/data/mock/seed';
+import { createSpotRepository } from '@/data/repositories';
 import type { SpotRepository } from '@/data/SpotRepository';
 import type { Result } from '@/data/result';
 import { rankingToFeedItem } from '@/domain/feedItem';
@@ -10,7 +10,7 @@ import { useFeedStore } from '@/store/feedStore';
 import { useProfileStore } from '@/store/profileStore';
 
 /** The single seam to data. Swap this for a backed repository later — store/screens unchanged. */
-const repo: SpotRepository = createDefaultSpotRepository();
+const repo: SpotRepository = createSpotRepository();
 
 export type Collection = 'local' | 'mine';
 
