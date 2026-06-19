@@ -1,4 +1,6 @@
+import { createDefaultHangRepository } from '@/data/mock/hangSeed';
 import { createDefaultSpotRepository } from '@/data/mock/seed';
+import type { HangRepository } from '@/data/HangRepository';
 import type { SpotRepository } from '@/data/SpotRepository';
 
 /**
@@ -19,4 +21,15 @@ export function createSpotRepository(): SpotRepository {
     return new SupabaseSpotRepository(supabase);
   }
   return createDefaultSpotRepository();
+}
+
+export function createHangRepository(): HangRepository {
+  if (usingSupabase) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { SupabaseHangRepository } = require('@/data/supabase/SupabaseHangRepository');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { supabase } = require('@/data/supabase/client');
+    return new SupabaseHangRepository(supabase);
+  }
+  return createDefaultHangRepository();
 }

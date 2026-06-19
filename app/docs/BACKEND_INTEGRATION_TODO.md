@@ -36,6 +36,16 @@ are written (or to pre-launch hardening). Resolve them alongside the relevant re
   transaction rewrites the whole order, sidestepping the `unique(user_id, position)` shuffle.
   Verified live (set order → reorder → clear). The deferred constraint stays as a safety net.
 
+## Hangs — status
+- DONE: `logHang`/`listForSpot`/`listMine`/`deleteHang`/`updateHang` persist (verified live).
+  Attendees are a denormalized jsonb snapshot (0003); identity is hydrated so your hangs stay
+  yours. Hang store loads per-spot (spot screen) and mine (profile) and merges by id.
+- TODO: **reactions/likes not persisted** — `toggleReaction` is still in-memory and
+  `Hang.likes` is hard-coded to 0 in the mapper. Add a `reactions` read/write path (toggle +
+  count heart reactions for `likes`).
+- NOTE: with the flag on, **feed + crew are still mock**, so identity hydration makes some
+  seeded feed/crew "you" attribution cosmetically off until those cut over.
+
 ## FeedRepository (the hardest)
 - **`activity` is under-denormalized** — it stores only ids + `rank`. Building
   `HangItem`/`RankedItem` needs `spotName`, author `by`, `access`, hang

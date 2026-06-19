@@ -64,4 +64,24 @@ describe('MockHangRepository', () => {
     await repo.logHang(draft);
     expect(seed).toHaveLength(0); // repo owns a copy; the caller's array is untouched
   });
+
+  it('listMine returns only the current user’s hangs', async () => {
+    const mine: Hang = { ...mk('hm', 'pontoon'), author: { id: 'sam', name: 'Sam', initial: 'S' } };
+    const repo = new MockHangRepository([mk('h1', 'pontoon'), mine]);
+    expect(unwrap(await repo.listMine()).items.map((h) => h.id)).toEqual(['hm']);
+  });
+
+  it('deleteHang removes a hang', async () => {
+    const repo = new MockHangRepository([mk('h1', 'pontoon'), mk('h2', 'pontoon')]);
+    await repo.deleteHang('h1');
+    expect(unwrap(await repo.listForSpot('pontoon')).items.map((h) => h.id)).toEqual(['h2']);
+  });
+
+  it('updateHang edits the title and note', async () => {
+    const repo = new MockHangRepository([mk('h1', 'pontoon')]);
+    await repo.updateHang('h1', { title: 'Edited', note: 'new' });
+    const h = unwrap(await repo.listForSpot('pontoon')).items[0];
+    expect(h.title).toBe('Edited');
+    expect(h.note).toBe('new');
+  });
 });

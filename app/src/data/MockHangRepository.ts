@@ -1,4 +1,5 @@
 import type { Hang, NewHang } from '../domain/models';
+import { CURRENT_MEMBER } from './mock/profile';
 import type { HangRepository } from './HangRepository';
 import { makeIdGenerator } from './mockId';
 import { paginate, type Page, type PageParams } from './page';
@@ -23,6 +24,15 @@ export class MockHangRepository implements HangRepository {
     );
   }
 
+  async listMine(params?: PageParams): Promise<Result<Page<Hang>>> {
+    return ok(
+      paginate(
+        this.hangs.filter((h) => h.author.id === CURRENT_MEMBER.id),
+        params,
+      ),
+    );
+  }
+
   async logHang(input: NewHang): Promise<Result<Hang>> {
     // id, timestamp, and starting counts are server-owned — the repo mints them.
     const hang: Hang = {
@@ -34,5 +44,17 @@ export class MockHangRepository implements HangRepository {
     };
     this.hangs.unshift(hang);
     return ok(hang);
+  }
+
+  async deleteHang(id: string): Promise<Result<void>> {
+    const i = this.hangs.findIndex((h) => h.id === id);
+    if (i !== -1) this.hangs.splice(i, 1);
+    return ok(undefined);
+  }
+
+  async updateHang(id: string, patch: { title?: string; note?: string }): Promise<Result<void>> {
+    const hang = this.hangs.find((h) => h.id === id);
+    if (hang) Object.assign(hang, patch);
+    return ok(undefined);
   }
 }

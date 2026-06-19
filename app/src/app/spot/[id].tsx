@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Bookmark, ChevronLeft, ListOrdered, Plus, Waves } from 'lucide-react-native';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -39,7 +39,11 @@ export default function SpotDetailScreen() {
     local.find((s) => s.id === id) ??
     fetchedSpot;
   const allHangs = useHangsStore((s) => s.hangs);
+  const loadForSpot = useHangsStore((s) => s.loadForSpot);
   const hangs = allHangs.filter((h) => h.spotId === id);
+  useEffect(() => {
+    void loadForSpot(id);
+  }, [id, loadForSpot]);
   const { requestDelete, confirmProps } = useHangDelete();
   const endorsements = useSpotsStore((s) => s.endorsements);
   const toggleEndorsement = useSpotsStore((s) => s.toggleEndorsement);
