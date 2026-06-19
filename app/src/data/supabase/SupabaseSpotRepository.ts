@@ -101,4 +101,10 @@ export class SupabaseSpotRepository implements SpotRepository {
       .eq('spot_id', spotId);
     return error ? failFrom(error) : ok(undefined);
   }
+
+  async setRanking(spotIds: string[]): Promise<Result<void>> {
+    // One transaction rewrites the whole order (see the set_rankings RPC migration).
+    const { error } = await this.db.rpc('set_rankings', { p_spot_ids: spotIds });
+    return error ? failFrom(error) : ok(undefined);
+  }
 }

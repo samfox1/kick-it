@@ -36,9 +36,9 @@ interface SpotsState {
    * the source of truth — every spot's score is re-derived from its position.
    * Ranking a spot promotes it out of "saved".
    */
-  rankSpot: (spot: Spot, index: number) => void;
+  rankSpot: (spot: Spot, index: number) => Promise<void>;
   /** Reorder the ranked list to a new order (e.g. after drag) and re-derive scores. */
-  reorderMine: (ordered: Spot[]) => void;
+  reorderMine: (ordered: Spot[]) => Promise<void>;
   /** Create a brand-new spot (id from the repo), then rank it at `index`. */
   addSpot: (draft: NewSpot, index: number) => Promise<Result<Spot>>;
   /** The user's own characteristic endorsements, keyed by spot id then characteristic id. */
@@ -107,9 +107,10 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
 
   isSaved: (id) => get().saved.some((m) => m.id === id),
 
-  rankSpot: (spot, index) => {
+  rankSpot: async (spot, index) => {
     const s = get();
     const isFirstTime = !s.mine.some((m) => m.id === spot.id);
+    const wasSaved = s.saved.some((m) => m.id === spot.id);
     const without = s.mine.filter((m) => m.id !== spot.id);
     const clamped = Math.max(0, Math.min(without.length, index));
     const mine = applyRankScores([...without.slice(0, clamped), spot, ...without.slice(clamped)]);
@@ -122,13 +123,20 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
           .getState()
           .prepend(rankingToFeedItem(useProfileStore.getState().member, ranked, clamped + 1));
     }
+    // Persist the new order; clear the bookmark if this spot was promoted out of saved.
+    await repo.setRanking(mine.map((m) => m.id));
+    if (wasSaved) await repo.unsaveSpot(spot.id);
   },
 
-  reorderMine: (ordered) => set(() => ({ mine: applyRankScores(ordered) })),
+  reorderMine: async (ordered) => {
+    const mine = applyRankScores(ordered);
+    set({ mine });
+    await repo.setRanking(mine.map((m) => m.id));
+  },
 
   addSpot: async (draft, index) => {
     const res = await repo.createSpot(draft);
-    if (res.ok) get().rankSpot(res.value, index);
+    if (res.ok) await get().rankSpot(res.value, index);
     return res;
   },
 

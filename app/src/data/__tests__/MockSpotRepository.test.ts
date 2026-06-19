@@ -71,6 +71,17 @@ describe('MockSpotRepository', () => {
     expect(seed.mine).toHaveLength(0); // repo owns a copy
   });
 
+  it('setRanking is a safe no-op for the mock (persistence is the Supabase repo’s job)', async () => {
+    const repo2 = new MockSpotRepository({
+      local: [],
+      mine: [makeSpot({ id: 'a' }), makeSpot({ id: 'b' })],
+    });
+    const res = await repo2.setRanking(['b', 'a']);
+    expect(res.ok).toBe(true);
+    // listMine still reflects the seed — the mock doesn't persist ranking order.
+    expect(unwrap(await repo2.listMine()).items.map((s) => s.id)).toEqual(['a', 'b']);
+  });
+
   it('saveSpot/listSaved/unsaveSpot track bookmarks by id', async () => {
     const repo2 = new MockSpotRepository({
       local: [makeSpot({ id: 'l1' }), makeSpot({ id: 'l2' })],

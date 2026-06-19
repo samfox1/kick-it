@@ -19,26 +19,22 @@ are written (or to pre-launch hardening). Resolve them alongside the relevant re
 - **`listLocal` distance** — `Spot.distanceMi` needs haversine from the viewer's
   lat/lng; PostgREST can't. Use an RPC (`list_local_spots(viewer_lat, viewer_lng)`) or
   compute client-side from stored `lat/lng`. Decide what `score` an unranked local spot gets.
-- **`listMine` score** — `scoreFromRank(index, total)` needs the whole-list `total`;
-  cursor pages don't carry it. Return `position` + a `count(*) over ()` total and let the
-  client run `applyRankScores`, or compute score in SQL.
+- **`listMine` score** — handled for the single-page case: the repo returns rankings ordered
+  by position and applies `applyRankScores`. Revisit if/when `listMine` paginates (a page
+  doesn't carry the whole-list `total` that `scoreFromRank` needs).
 - **`characteristic_ids text[]` vs `endorsements` FK** — two sources of truth for a spot's
   traits. Prefer a `spot_characteristics(spot_id, characteristic_id)` join table; map back
   to `string[]` in the repo.
 
 ## Spot writes — status
 - DONE: `createSpot`, `saveSpot`/`unsaveSpot`/`listSaved` persist (verified live).
-- TODO: `rankSpot`/`reorderMine` are still in-memory only (My spots is empty under Supabase
-  until these land). See Rankings below.
-- TODO: when a saved spot is ranked, `rankSpot` clears it from saved locally but NOT from
-  `saved_spots`. When persisting rankings, also call `unsaveSpot` so the row is removed.
+- DONE: `rankSpot`/`reorderMine` persist via the `set_rankings` RPC (0002); ranking a saved
+  spot also clears its `saved_spots` row. So all spot writes are now persisted.
 
-## Rankings (reorder)
-- `unique(user_id, position)` is `DEFERRABLE INITIALLY DEFERRED`, which only helps inside a
-  **single transaction**. PostgREST runs one tx per request, so row-by-row reorder via
-  `.update().eq()` will violate it. Add a **`reorder_ranking(p_spot_id, p_to)` RPC**
-  (security definer, asserts `user_id = auth.uid()`) that shifts positions in one statement.
-  Same applies to inserting at position 0.
+## Rankings (reorder) — DONE
+- Solved with `set_rankings(p_spot_ids uuid[])` (migration 0002): delete-then-insert in one
+  transaction rewrites the whole order, sidestepping the `unique(user_id, position)` shuffle.
+  Verified live (set order → reorder → clear). The deferred constraint stays as a safety net.
 
 ## FeedRepository (the hardest)
 - **`activity` is under-denormalized** — it stores only ids + `rank`. Building

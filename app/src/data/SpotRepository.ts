@@ -23,4 +23,6 @@ export interface SpotRepository {
   saveSpot(spotId: string): Promise<Result<void>>;
   /** Remove a bookmark for the current user. */
   unsaveSpot(spotId: string): Promise<Result<void>>;
+  /** Replace the current user's ranked order with exactly `spotIds` (index = position). */
+  setRanking(spotIds: string[]): Promise<Result<void>>;
 }

@@ -64,4 +64,10 @@ export class MockSpotRepository implements SpotRepository {
     this.savedIds.delete(spotId);
     return ok(undefined);
   }
+
+  // No-op: the mock is ephemeral, so ranking order lives in the store during a session
+  // and resets to the seed on reload. Only the Supabase repo persists ranking.
+  async setRanking(_spotIds: string[]): Promise<Result<void>> {
+    return ok(undefined);
+  }
 }
