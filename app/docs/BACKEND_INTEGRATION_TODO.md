@@ -26,6 +26,13 @@ are written (or to pre-launch hardening). Resolve them alongside the relevant re
   traits. Prefer a `spot_characteristics(spot_id, characteristic_id)` join table; map back
   to `string[]` in the repo.
 
+## Spot writes — status
+- DONE: `createSpot`, `saveSpot`/`unsaveSpot`/`listSaved` persist (verified live).
+- TODO: `rankSpot`/`reorderMine` are still in-memory only (My spots is empty under Supabase
+  until these land). See Rankings below.
+- TODO: when a saved spot is ranked, `rankSpot` clears it from saved locally but NOT from
+  `saved_spots`. When persisting rankings, also call `unsaveSpot` so the row is removed.
+
 ## Rankings (reorder)
 - `unique(user_id, position)` is `DEFERRABLE INITIALLY DEFERRED`, which only helps inside a
   **single transaction**. PostgREST runs one tx per request, so row-by-row reorder via

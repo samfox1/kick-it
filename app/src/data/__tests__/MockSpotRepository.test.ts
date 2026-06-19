@@ -70,4 +70,19 @@ describe('MockSpotRepository', () => {
     await repo2.createSpot(spotDraft);
     expect(seed.mine).toHaveLength(0); // repo owns a copy
   });
+
+  it('saveSpot/listSaved/unsaveSpot track bookmarks by id', async () => {
+    const repo2 = new MockSpotRepository({
+      local: [makeSpot({ id: 'l1' }), makeSpot({ id: 'l2' })],
+      mine: [],
+    });
+    expect(unwrap(await repo2.listSaved()).items).toEqual([]);
+
+    await repo2.saveSpot('l1');
+    await repo2.saveSpot('l1'); // idempotent
+    expect(unwrap(await repo2.listSaved()).items.map((s) => s.id)).toEqual(['l1']);
+
+    await repo2.unsaveSpot('l1');
+    expect(unwrap(await repo2.listSaved()).items).toEqual([]);
+  });
 });

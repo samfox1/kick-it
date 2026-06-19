@@ -71,4 +71,34 @@ export class SupabaseSpotRepository implements SpotRepository {
     if (error) return failFrom(error);
     return ok(rowToSpot(data as SpotRow));
   }
+
+  async listSaved(_params?: PageParams): Promise<Result<Page<Spot>>> {
+    const { data, error } = await this.db.from('saved_spots').select(`spots ( ${COLUMNS} )`);
+    if (error) return failFrom(error);
+    const rows = (data ?? []) as unknown as { spots: SpotRow | null }[];
+    const items = rows.filter((r) => r.spots).map((r) => rowToSpot(r.spots as SpotRow));
+    return ok({ items });
+  }
+
+  async saveSpot(spotId: string): Promise<Result<void>> {
+    const { data: userData } = await this.db.auth.getUser();
+    const userId = userData.user?.id;
+    if (!userId) return fail('unauthorized', 'Not signed in');
+    const { error } = await this.db
+      .from('saved_spots')
+      .upsert({ user_id: userId, spot_id: spotId });
+    return error ? failFrom(error) : ok(undefined);
+  }
+
+  async unsaveSpot(spotId: string): Promise<Result<void>> {
+    const { data: userData } = await this.db.auth.getUser();
+    const userId = userData.user?.id;
+    if (!userId) return fail('unauthorized', 'Not signed in');
+    const { error } = await this.db
+      .from('saved_spots')
+      .delete()
+      .eq('user_id', userId)
+      .eq('spot_id', spotId);
+    return error ? failFrom(error) : ok(undefined);
+  }
 }

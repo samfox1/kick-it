@@ -17,4 +17,10 @@ export interface SpotRepository {
   getById(id: string): Promise<Result<Spot | undefined>>;
   /** Create a new spot; the repo assigns id (and a placeholder score). Returns the record. */
   createSpot(input: NewSpot): Promise<Result<Spot>>;
+  /** The current user's bookmarked spots. */
+  listSaved(params?: PageParams): Promise<Result<Page<Spot>>>;
+  /** Bookmark a spot for the current user (idempotent). */
+  saveSpot(spotId: string): Promise<Result<void>>;
+  /** Remove a bookmark for the current user. */
+  unsaveSpot(spotId: string): Promise<Result<void>>;
 }

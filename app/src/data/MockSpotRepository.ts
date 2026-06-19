@@ -20,6 +20,7 @@ function withStats(spot: Spot): Spot {
 export class MockSpotRepository implements SpotRepository {
   private readonly seed: SpotSeed;
   private readonly nextId = makeIdGenerator('spot');
+  private readonly savedIds = new Set<string>();
 
   constructor(seed: SpotSeed) {
     this.seed = { local: [...seed.local], mine: [...seed.mine] };
@@ -43,5 +44,24 @@ export class MockSpotRepository implements SpotRepository {
     const spot: Spot = { ...input, id: this.nextId(), score: 0 };
     this.seed.mine.unshift(spot);
     return ok(spot);
+  }
+
+  async listSaved(params?: PageParams): Promise<Result<Page<Spot>>> {
+    const all = [...this.seed.local, ...this.seed.mine];
+    const items = [...this.savedIds]
+      .map((id) => all.find((s) => s.id === id))
+      .filter((s): s is Spot => Boolean(s))
+      .map(withStats);
+    return ok(paginate(items, params));
+  }
+
+  async saveSpot(spotId: string): Promise<Result<void>> {
+    this.savedIds.add(spotId);
+    return ok(undefined);
+  }
+
+  async unsaveSpot(spotId: string): Promise<Result<void>> {
+    this.savedIds.delete(spotId);
+    return ok(undefined);
   }
 }

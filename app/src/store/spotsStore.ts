@@ -28,8 +28,8 @@ interface SpotsState {
   setCollection: (c: Collection) => void;
   setMaxDistance: (mi: number) => void;
   toggleNonNegotiable: (id: string) => void;
-  saveSpot: (spot: Spot) => void;
-  unsaveSpot: (id: string) => void;
+  saveSpot: (spot: Spot) => Promise<void>;
+  unsaveSpot: (id: string) => Promise<void>;
   isSaved: (id: string) => boolean;
   /**
    * Place a spot at rank `index` in your ranked list ("mine"); 0 = top. Order is
@@ -57,7 +57,11 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
   endorsements: {},
 
   load: async () => {
-    const [localRes, mineRes] = await Promise.all([repo.listLocal(), repo.listMine()]);
+    const [localRes, mineRes, savedRes] = await Promise.all([
+      repo.listLocal(),
+      repo.listMine(),
+      repo.listSaved(),
+    ]);
     if (!localRes.ok) {
       set({ loaded: true, error: localRes.error.message });
       return;
@@ -69,7 +73,8 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
     // Establish rank order from the seed's scores, then derive clean band scores so
     // the order-as-truth model is consistent from the first render.
     const mine = applyRankScores(sortByScoreDesc(mineRes.value.items));
-    set({ local: localRes.value.items, mine, loaded: true, error: null });
+    const saved = savedRes.ok ? savedRes.value.items : [];
+    set({ local: localRes.value.items, mine, saved, loaded: true, error: null });
   },
 
   setCollection: (collection) => set({ collection }),
@@ -85,15 +90,20 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
       return { preferences: { ...s.preferences, nonNegotiables } };
     }),
 
-  saveSpot: (spot) =>
-    set((s) => {
-      // Invariant: a spot is in at most one of saved/mine. Already-ranked or
-      // already-saved spots are left alone (saved ∩ mine stays empty).
-      const exists = s.saved.some((m) => m.id === spot.id) || s.mine.some((m) => m.id === spot.id);
-      return exists ? s : { saved: [...s.saved, spot] };
-    }),
+  saveSpot: async (spot) => {
+    // Invariant: a spot is in at most one of saved/mine. Already-ranked or
+    // already-saved spots are left alone (saved ∩ mine stays empty).
+    const s = get();
+    const exists = s.saved.some((m) => m.id === spot.id) || s.mine.some((m) => m.id === spot.id);
+    if (exists) return;
+    const res = await repo.saveSpot(spot.id);
+    if (res.ok) set((st) => ({ saved: [...st.saved, spot] }));
+  },
 
-  unsaveSpot: (id) => set((s) => ({ saved: s.saved.filter((m) => m.id !== id) })),
+  unsaveSpot: async (id) => {
+    const res = await repo.unsaveSpot(id);
+    if (res.ok) set((s) => ({ saved: s.saved.filter((m) => m.id !== id) }));
+  },
 
   isSaved: (id) => get().saved.some((m) => m.id === id),
 

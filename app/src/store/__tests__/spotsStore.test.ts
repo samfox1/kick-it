@@ -5,33 +5,33 @@ import { makeSpot } from '../../test-utils/factories';
 describe('spotsStore saved collection', () => {
   beforeEach(() => useSpotsStore.setState({ saved: [], mine: [] }));
 
-  it('saveSpot adds a spot to your saved collection', () => {
-    useSpotsStore.getState().saveSpot(makeSpot({ id: 'a' }));
+  it('saveSpot adds a spot to your saved collection', async () => {
+    await useSpotsStore.getState().saveSpot(makeSpot({ id: 'a' }));
     expect(useSpotsStore.getState().saved.map((s) => s.id)).toEqual(['a']);
   });
 
-  it('saveSpot is idempotent', () => {
+  it('saveSpot is idempotent', async () => {
     const spot = makeSpot({ id: 'a' });
-    useSpotsStore.getState().saveSpot(spot);
-    useSpotsStore.getState().saveSpot(spot);
+    await useSpotsStore.getState().saveSpot(spot);
+    await useSpotsStore.getState().saveSpot(spot);
     expect(useSpotsStore.getState().saved).toHaveLength(1);
   });
 
-  it('unsaveSpot removes it', () => {
-    useSpotsStore.getState().saveSpot(makeSpot({ id: 'a' }));
-    useSpotsStore.getState().unsaveSpot('a');
+  it('unsaveSpot removes it', async () => {
+    await useSpotsStore.getState().saveSpot(makeSpot({ id: 'a' }));
+    await useSpotsStore.getState().unsaveSpot('a');
     expect(useSpotsStore.getState().saved).toEqual([]);
   });
 
-  it('isSaved reflects membership', () => {
+  it('isSaved reflects membership', async () => {
     expect(useSpotsStore.getState().isSaved('a')).toBe(false);
-    useSpotsStore.getState().saveSpot(makeSpot({ id: 'a' }));
+    await useSpotsStore.getState().saveSpot(makeSpot({ id: 'a' }));
     expect(useSpotsStore.getState().isSaved('a')).toBe(true);
   });
 
-  it('saveSpot is a no-op for an already-ranked spot (saved ∩ mine stays empty)', () => {
+  it('saveSpot is a no-op for an already-ranked spot (saved ∩ mine stays empty)', async () => {
     useSpotsStore.setState({ mine: [makeSpot({ id: 'a' })] });
-    useSpotsStore.getState().saveSpot(makeSpot({ id: 'a' }));
+    await useSpotsStore.getState().saveSpot(makeSpot({ id: 'a' }));
     expect(useSpotsStore.getState().saved).toEqual([]);
   });
 });
@@ -174,9 +174,9 @@ describe('spotsStore endorsements', () => {
 describe('spotsStore edge cases', () => {
   beforeEach(() => useSpotsStore.setState({ saved: [], mine: [] }));
 
-  it('unsaveSpot on an unknown id is a safe no-op', () => {
+  it('unsaveSpot on an unknown id is a safe no-op', async () => {
     useSpotsStore.setState({ saved: [makeSpot({ id: 'a' })] });
-    useSpotsStore.getState().unsaveSpot('missing');
+    await useSpotsStore.getState().unsaveSpot('missing');
     expect(useSpotsStore.getState().saved.map((s) => s.id)).toEqual(['a']);
   });
 });
