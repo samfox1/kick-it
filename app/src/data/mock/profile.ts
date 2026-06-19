@@ -1,6 +1,6 @@
 import type { Member } from '../../domain/models';
 
-/** The single mock user as a crew Member — the one identity used everywhere (feed, hangs). */
+/** The mock-mode identity (used when not on Supabase; Supabase hydrates the real auth user). */
 export const CURRENT_MEMBER: Member = { id: 'sam', name: 'Sam Fox', initial: 'S' };
 
 /** The single mock user (no auth yet) — the member plus profile-only fields. */

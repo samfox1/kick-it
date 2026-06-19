@@ -7,6 +7,7 @@ import { applyRankScores } from '@/domain/ranking';
 import type { NewSpot, Spot } from '@/domain/models';
 import { failFrom } from './errors';
 import { rowToSpot, type SpotRow } from './mappers';
+import { currentUserId } from './session';
 
 const COLUMNS =
   'id, name, category, access, location, lat, lng, image, images, characteristic_ids, description';
@@ -24,7 +25,7 @@ export class SupabaseSpotRepository implements SpotRepository {
   async listLocal(_params?: PageParams): Promise<Result<Page<Spot>>> {
     const { data, error } = await this.db.from('spots').select(COLUMNS).eq('access', 'open');
     if (error) return failFrom(error);
-    return ok({ items: (data as SpotRow[]).map(rowToSpot) });
+    return ok({ items: ((data ?? []) as SpotRow[]).map(rowToSpot) });
   }
 
   async listMine(_params?: PageParams): Promise<Result<Page<Spot>>> {
@@ -47,8 +48,7 @@ export class SupabaseSpotRepository implements SpotRepository {
   }
 
   async createSpot(input: NewSpot): Promise<Result<Spot>> {
-    const { data: userData } = await this.db.auth.getUser();
-    const creatorId = userData.user?.id;
+    const creatorId = await currentUserId(this.db);
     if (!creatorId) return fail('unauthorized', 'Not signed in');
 
     const { data, error } = await this.db
@@ -81,8 +81,7 @@ export class SupabaseSpotRepository implements SpotRepository {
   }
 
   async saveSpot(spotId: string): Promise<Result<void>> {
-    const { data: userData } = await this.db.auth.getUser();
-    const userId = userData.user?.id;
+    const userId = await currentUserId(this.db);
     if (!userId) return fail('unauthorized', 'Not signed in');
     const { error } = await this.db
       .from('saved_spots')
@@ -91,8 +90,7 @@ export class SupabaseSpotRepository implements SpotRepository {
   }
 
   async unsaveSpot(spotId: string): Promise<Result<void>> {
-    const { data: userData } = await this.db.auth.getUser();
-    const userId = userData.user?.id;
+    const userId = await currentUserId(this.db);
     if (!userId) return fail('unauthorized', 'Not signed in');
     const { error } = await this.db
       .from('saved_spots')

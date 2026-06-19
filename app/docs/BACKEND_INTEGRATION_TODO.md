@@ -5,6 +5,18 @@ Tracks decisions/work surfaced by the code review of the Supabase foundation
 items below are deliberately deferred to when the Supabase-backed repositories
 are written (or to pre-launch hardening). Resolve them alongside the relevant repo.
 
+## Post-cutover review (2026-06-19) — fixed + remaining
+Fixed: extracted `currentUserId(db)` (killed 8× auth-guard dup + the auth leak); optimistic
+store writes now `reportFailure` instead of dropping Results silently; `loadForSpot`/`loadMine`
+use `replaceScope` (authoritative per scope, so server deletes propagate); `parseFeedItem`
+validates the `activity.payload` boundary; render gated on session-ready (no stale-'sam' writes);
+`listLocal` null-guard; mapper/feed edge tests added.
+Remaining: (1) optimistic writes only *log* failures — add rollback/retry for delete/update/rank
+(merge can't reconcile a failed edit). (2) Pagination divergence — Supabase lists return a single
+page (ignore `params`/`nextCursor`) while the mock paginates; make explicit or implement keyset.
+(3) A cross-implementation contract-parity test suite (same assertions vs mock + Supabase) would
+catch mock/prod drift. (4) `AttendeeSnapshot` type for the jsonb (vs reusing `Member`).
+
 ## Seams to add WITH the first repository
 - **`mapPostgrestError(error) → RepoError`** — one shared translator (RLS denial /
   `42501` / `PGRST116` not-found / network) next to `client.ts`, so the three repos

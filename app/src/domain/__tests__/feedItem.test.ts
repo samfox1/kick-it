@@ -1,4 +1,4 @@
-import { hangToFeedItem, rankingToFeedItem } from '../feedItem';
+import { hangToFeedItem, parseFeedItem, rankingToFeedItem } from '../feedItem';
 import { makeHang, makeSpot } from '../../test-utils/factories';
 
 describe('hangToFeedItem', () => {
@@ -31,5 +31,19 @@ describe('rankingToFeedItem', () => {
     expect(item.by.name).toBe('Sam Fox');
     expect(item.rank).toBe(1);
     expect(item.score).toBe(9.6);
+  });
+});
+
+describe('parseFeedItem', () => {
+  it('accepts a valid feed payload', () => {
+    const item = hangToFeedItem(makeHang({ id: 'h1', spotId: 'x' }), { name: 'X', access: 'open' });
+    expect(parseFeedItem(item)).toBe(item);
+  });
+
+  it('rejects malformed/empty payloads (defends the as-FeedItem boundary)', () => {
+    expect(parseFeedItem(null)).toBeNull();
+    expect(parseFeedItem({})).toBeNull(); // e.g. the activity.payload default '{}'
+    expect(parseFeedItem({ kind: 'bogus', id: 'a', spotId: 'b' })).toBeNull();
+    expect(parseFeedItem({ kind: 'hang', spotId: 'b' })).toBeNull(); // missing id
   });
 });

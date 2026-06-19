@@ -1,6 +1,15 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { fail, ok, type Result } from '@/data/result';
 import { supabase } from '@/data/supabase/client';
 import type { Member } from '@/domain/models';
+
+/** The current authenticated user's id, or null. The one place repos resolve identity,
+ *  so they never reach into supabase.auth directly. */
+export async function currentUserId(db: SupabaseClient): Promise<string | null> {
+  const { data } = await db.auth.getUser();
+  return data.user?.id ?? null;
+}
 
 type ProfileDefaults = { name: string; initial: string };
 

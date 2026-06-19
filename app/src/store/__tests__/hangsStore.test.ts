@@ -1,4 +1,4 @@
-import { useHangsStore } from '../hangsStore';
+import { useHangsStore, replaceScope } from '../hangsStore';
 import { useFeedStore } from '../feedStore';
 import { useSpotsStore } from '../spotsStore';
 import type { Hang } from '@/domain/models';
@@ -147,5 +147,24 @@ describe('hangsStore reactions', () => {
     useHangsStore.getState().toggleReaction('a', 'heart');
     useHangsStore.getState().deleteHang('a');
     expect(useHangsStore.getState().reactions.a).toBeUndefined();
+  });
+});
+
+describe('replaceScope', () => {
+  const mk = (id: string, over: Partial<Hang> = {}) => hang(id, over);
+
+  it('replaces in-scope hangs with the fetched set, keeping out-of-scope ones', () => {
+    const existing = [mk('a', { spotId: 'pontoon' }), mk('b', { spotId: 'rooftop' })];
+    const incoming = [mk('c', { spotId: 'pontoon' })]; // fresh pontoon ledger
+    const out = replaceScope(existing, incoming, (h) => h.spotId === 'pontoon');
+    // 'a' (stale/deleted pontoon hang) is dropped; 'b' (other spot) kept; 'c' added.
+    expect(out.map((h) => h.id)).toEqual(['c', 'b']);
+  });
+
+  it('de-dupes when a fetched hang is also already cached out of scope-mismatch', () => {
+    const existing = [mk('a', { spotId: 'pontoon' })];
+    const incoming = [mk('a', { spotId: 'pontoon' })];
+    const out = replaceScope(existing, incoming, (h) => h.spotId === 'pontoon');
+    expect(out.map((h) => h.id)).toEqual(['a']);
   });
 });

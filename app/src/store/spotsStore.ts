@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 import { createSpotRepository } from '@/data/repositories';
 import type { SpotRepository } from '@/data/SpotRepository';
-import type { Result } from '@/data/result';
+import { reportFailure, type Result } from '@/data/result';
 import { rankingToFeedItem } from '@/domain/feedItem';
 import type { NewSpot, Preferences, Spot } from '@/domain/models';
 import { applyRankScores, sortByScoreDesc } from '@/domain/ranking';
@@ -124,14 +124,14 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
           .prepend(rankingToFeedItem(useProfileStore.getState().member, ranked, clamped + 1));
     }
     // Persist the new order; clear the bookmark if this spot was promoted out of saved.
-    await repo.setRanking(mine.map((m) => m.id));
-    if (wasSaved) await repo.unsaveSpot(spot.id);
+    reportFailure('rankSpot', await repo.setRanking(mine.map((m) => m.id)));
+    if (wasSaved) reportFailure('unsaveSpot', await repo.unsaveSpot(spot.id));
   },
 
   reorderMine: async (ordered) => {
     const mine = applyRankScores(ordered);
     set({ mine });
-    await repo.setRanking(mine.map((m) => m.id));
+    reportFailure('reorderMine', await repo.setRanking(mine.map((m) => m.id)));
   },
 
   addSpot: async (draft, index) => {

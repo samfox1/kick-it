@@ -9,6 +9,7 @@ describe('mapPostgrestError', () => {
 
   it('maps an HTTP 401/403 to unauthorized', () => {
     expect(mapPostgrestError({ status: 401, message: 'no' }).code).toBe('unauthorized');
+    expect(mapPostgrestError({ status: 403, message: 'forbidden' }).code).toBe('unauthorized');
   });
 
   it('maps PGRST116 (no rows) to not_found', () => {

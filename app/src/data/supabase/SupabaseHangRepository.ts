@@ -6,6 +6,7 @@ import { fail, ok, type Result } from '@/data/result';
 import type { Hang, NewHang, ReactionKey } from '@/domain/models';
 import { failFrom } from './errors';
 import { rowToHang, type HangRow } from './mappers';
+import { currentUserId } from './session';
 
 const COLUMNS =
   'id, spot_id, title, note, image, extra_attendees, attendees, created_at, author:profiles!author_id ( id, name, initial )';
@@ -28,8 +29,7 @@ export class SupabaseHangRepository implements HangRepository {
   }
 
   async listMine(_params?: PageParams): Promise<Result<Page<Hang>>> {
-    const { data: userData } = await this.db.auth.getUser();
-    const userId = userData.user?.id;
+    const userId = await currentUserId(this.db);
     if (!userId) return fail('unauthorized', 'Not signed in');
     const { data, error } = await this.db
       .from('hangs')
@@ -41,8 +41,7 @@ export class SupabaseHangRepository implements HangRepository {
   }
 
   async logHang(input: NewHang): Promise<Result<Hang>> {
-    const { data: userData } = await this.db.auth.getUser();
-    const userId = userData.user?.id;
+    const userId = await currentUserId(this.db);
     if (!userId) return fail('unauthorized', 'Not signed in');
 
     const { data, error } = await this.db
@@ -73,8 +72,7 @@ export class SupabaseHangRepository implements HangRepository {
   }
 
   async listMyReactions(): Promise<Result<ReactionMap>> {
-    const { data: userData } = await this.db.auth.getUser();
-    const userId = userData.user?.id;
+    const userId = await currentUserId(this.db);
     if (!userId) return fail('unauthorized', 'Not signed in');
     const { data, error } = await this.db
       .from('reactions')
@@ -89,8 +87,7 @@ export class SupabaseHangRepository implements HangRepository {
   }
 
   async setReaction(hangId: string, key: ReactionKey, on: boolean): Promise<Result<void>> {
-    const { data: userData } = await this.db.auth.getUser();
-    const userId = userData.user?.id;
+    const userId = await currentUserId(this.db);
     if (!userId) return fail('unauthorized', 'Not signed in');
     if (on) {
       const { error } = await this.db

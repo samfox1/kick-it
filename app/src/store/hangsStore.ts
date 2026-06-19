@@ -4,16 +4,24 @@ import { HANGS } from '@/data/mock/hangSeed';
 import { createHangRepository, usingSupabase } from '@/data/repositories';
 import type { Hang, NewHang, ReactionKey } from '@/domain/models';
 import { hangToFeedItem } from '@/domain/feedItem';
-import type { Result } from '@/data/result';
+import { reportFailure, type Result } from '@/data/result';
 import { useFeedStore } from '@/store/feedStore';
+import { useProfileStore } from '@/store/profileStore';
 import { useSpotsStore } from '@/store/spotsStore';
 
 const repo = createHangRepository();
 
-/** Merge fetched hangs into the cache, fetched first, de-duped by id. */
-function mergeHangs(existing: Hang[], incoming: Hang[]): Hang[] {
-  const incomingIds = new Set(incoming.map((h) => h.id));
-  return [...incoming, ...existing.filter((h) => !incomingIds.has(h.id))];
+/**
+ * Replace every cached hang within a scope (e.g. one spot's ledger, or your own hangs)
+ * with the freshly-fetched set, keeping out-of-scope hangs untouched. Authoritative within
+ * the scope, so server deletes/edits actually propagate on reload (a plain union can't).
+ */
+export function replaceScope(
+  existing: Hang[],
+  incoming: Hang[],
+  inScope: (h: Hang) => boolean,
+): Hang[] {
+  return [...incoming, ...existing.filter((h) => !inScope(h))];
 }
 
 /** Mutable store of logged hangs. On Supabase it loads per-spot / mine from the repo;
@@ -45,12 +53,15 @@ export const useHangsStore = create<HangsState>((set, get) => ({
 
   loadForSpot: async (spotId) => {
     const res = await repo.listForSpot(spotId);
-    if (res.ok) set((s) => ({ hangs: mergeHangs(s.hangs, res.value.items) }));
+    if (res.ok)
+      set((s) => ({ hangs: replaceScope(s.hangs, res.value.items, (h) => h.spotId === spotId) }));
   },
 
   loadMine: async () => {
     const res = await repo.listMine();
-    if (res.ok) set((s) => ({ hangs: mergeHangs(s.hangs, res.value.items) }));
+    if (!res.ok) return;
+    const meId = useProfileStore.getState().member.id;
+    set((s) => ({ hangs: replaceScope(s.hangs, res.value.items, (h) => h.author.id === meId) }));
   },
 
   loadMyReactions: async () => {
@@ -63,12 +74,12 @@ export const useHangsStore = create<HangsState>((set, get) => ({
       const { [id]: _removed, ...reactions } = s.reactions;
       return { hangs: s.hangs.filter((h) => h.id !== id), reactions };
     });
-    await repo.deleteHang(id);
+    reportFailure('deleteHang', await repo.deleteHang(id));
   },
 
   updateHang: async (id, patch) => {
     set((s) => ({ hangs: s.hangs.map((h) => (h.id === id ? { ...h, ...patch } : h)) }));
-    await repo.updateHang(id, patch);
+    reportFailure('updateHang', await repo.updateHang(id, patch));
   },
 
   toggleReaction: (hangId, key) => {
@@ -76,7 +87,7 @@ export const useHangsStore = create<HangsState>((set, get) => ({
     set((s) => ({
       reactions: { ...s.reactions, [hangId]: { ...(s.reactions[hangId] ?? {}), [key]: on } },
     }));
-    void repo.setReaction(hangId, key, on);
+    void repo.setReaction(hangId, key, on).then((res) => reportFailure('setReaction', res));
   },
 
   logHang: async (draft) => {

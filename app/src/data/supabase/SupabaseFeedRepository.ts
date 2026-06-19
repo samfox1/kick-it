@@ -3,9 +3,11 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { FeedRepository } from '@/data/FeedRepository';
 import type { Page, PageParams } from '@/data/page';
 import { fail, ok, type Result } from '@/data/result';
+import { parseFeedItem } from '@/domain/feedItem';
 import type { FeedItem } from '@/domain/models';
 import { failFrom } from './errors';
 import { timeAgo } from './mappers';
+import { currentUserId } from './session';
 
 /**
  * Supabase-backed FeedRepository. The feed is an immutable activity log: each row stores a
@@ -21,10 +23,12 @@ export class SupabaseFeedRepository implements FeedRepository {
       .select('created_at, payload')
       .order('created_at', { ascending: false });
     if (error) return failFrom(error);
-    const items = ((data ?? []) as { created_at: string; payload: FeedItem }[]).map((r) => ({
-      ...r.payload,
-      when: timeAgo(r.created_at),
-    }));
+    const items = ((data ?? []) as { created_at: string; payload: unknown }[])
+      .map((r) => {
+        const item = parseFeedItem(r.payload);
+        return item ? { ...item, when: timeAgo(r.created_at) } : null;
+      })
+      .filter((x): x is FeedItem => x !== null);
     return ok({ items });
   }
 
@@ -32,8 +36,7 @@ export class SupabaseFeedRepository implements FeedRepository {
     // New spots are discovered on Explore, not the feed.
     if (item.kind === 'new_spot') return ok(undefined);
 
-    const { data: userData } = await this.db.auth.getUser();
-    const userId = userData.user?.id;
+    const userId = await currentUserId(this.db);
     if (!userId) return fail('unauthorized', 'Not signed in');
 
     // The hang feed id is `feed-<hangId>`; recover it so deleting the hang cascades the row.

@@ -5,6 +5,7 @@ import { crewFriendIds } from '@/data/mock/profile';
 import { mockSaveCount } from '@/data/mock/stats';
 import { createFeedRepository } from '@/data/repositories';
 import type { FeedRepository } from '@/data/FeedRepository';
+import { reportFailure } from '@/data/result';
 import { visibleFeed } from '@/domain/feedView';
 import type { FeedItem } from '@/domain/models';
 import { hangCountForSpot } from '@/domain/spotStats';
@@ -42,7 +43,7 @@ export const useFeedStore = create<FeedState>((set) => ({
   error: null,
   prepend: (item) => {
     set((s) => ({ items: [item, ...s.items] }));
-    void repo.postActivity(item);
+    void repo.postActivity(item).then((res) => reportFailure('postActivity', res));
   },
   load: async () => {
     const res = await repo.listFeed();

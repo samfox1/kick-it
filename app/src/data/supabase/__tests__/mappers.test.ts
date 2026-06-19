@@ -65,6 +65,12 @@ describe('timeAgo', () => {
     expect(timeAgo(new Date(now - 3 * 3600 * 1000).toISOString(), now)).toBe('3h ago');
     expect(timeAgo(new Date(now - 2 * 86400 * 1000).toISOString(), now)).toBe('2d ago');
   });
+
+  it('falls back to an absolute date past a week', () => {
+    const out = timeAgo(new Date(now - 10 * 86400 * 1000).toISOString(), now);
+    expect(out).not.toMatch(/ago|Just now/);
+    expect(out.length).toBeGreaterThan(0);
+  });
 });
 
 describe('rowToHang', () => {
@@ -100,5 +106,10 @@ describe('rowToHang', () => {
     const hang = rowToHang({ ...row, note: null, attendees: null }, now);
     expect(hang.note).toBe('');
     expect(hang.attendees).toEqual([]);
+  });
+
+  it('falls back to an Unknown author when the profile join is null', () => {
+    const hang = rowToHang({ ...row, author: null }, now);
+    expect(hang.author).toEqual({ id: '', name: 'Unknown', initial: '?' });
   });
 });

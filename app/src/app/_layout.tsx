@@ -8,7 +8,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -26,18 +26,20 @@ export default function RootLayout() {
   });
 
   // On Supabase, establish a session + profile on launch and hydrate the profile store
-  // so identity is the real auth user (your hangs/spots stay yours). In mock mode we skip
-  // this entirely and keep the seeded 'sam' identity.
+  // so identity is the real auth user (your hangs/spots stay yours). We gate render until
+  // this resolves so nothing persists under the stale 'sam' identity. Mock mode skips it.
+  const [sessionReady, setSessionReady] = useState(!usingSupabase);
   useEffect(() => {
     if (!usingSupabase) return;
     const { member, hydrate } = useProfileStore.getState();
     ensureSession({ name: member.name, initial: member.initial }).then((res) => {
       if (res.ok) hydrate(res.value);
       else console.warn('Session bootstrap failed:', res.error.message);
+      setSessionReady(true);
     });
   }, []);
 
-  if (!loaded) return null;
+  if (!loaded || !sessionReady) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
