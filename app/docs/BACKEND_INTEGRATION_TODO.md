@@ -44,8 +44,8 @@ are written (or to pre-launch hardening). Resolve them alongside the relevant re
   and `loadMyReactions` hydrates them (verified live). Cascades on hang delete.
 - TODO (multi-user): `Hang.likes` base is still 0 in the mapper — fine for one user (count =
   your own heart), but aggregate other users' heart counts once there are other users.
-- NOTE: with the flag on, **feed is still mock** (cut over next). Feed visibility now uses the
-  hydrated identity (`crewFriendIds(selfId, ...)`), so your own friends-only items show.
+- Feed visibility uses the hydrated identity (`crewFriendIds(selfId, ...)`), so your own
+  friends-only items show.
 
 ## Crew — deferred by design
 - Crew is inherently multi-user; with a single real account a faithful cutover is an empty
@@ -54,17 +54,15 @@ are written (or to pre-launch hardening). Resolve them alongside the relevant re
   hardcoded mock id). When real users exist: persist crew_members/crew_requests + make hang
   attendees reference real profiles (the snapshot can carry an optional member_id then).
 
-## FeedRepository (the hardest)
-- **`activity` is under-denormalized** — it stores only ids + `rank`. Building
-  `HangItem`/`RankedItem` needs `spotName`, author `by`, `access`, hang
-  `image/note/attendees/extraAttendees/likes`, ranked `category/score/thumb`. And a global
-  feed of others' rankings has **no per-viewer `score`**. → **snapshot** the display fields
-  onto the `activity` row at write time (feed entries are immutable history anyway).
-- **`new_spot` union arm** — `FeedItem` still includes `NewSpotItem` (used by `FeedCard`,
-  `notifications`, factories) but the feed seed dropped it and `activity_kind` lacks it.
-  Reconcile: narrow the union (drop `new_spot`) OR add `'new_spot'` to `activity_kind`.
-- Add a `check` so `activity` rows are valid per kind
-  (`kind='hang'` ⇒ `hang_id` not null; `kind='ranked'` ⇒ `rank` not null).
+## FeedRepository — DONE
+- Solved with `activity.payload jsonb` (0004): each row stores a denormalized FeedItem
+  snapshot, so cards render without joins and there's no per-viewer score ambiguity (score/
+  name/author frozen at write time). `when` is recomputed from `created_at` on read.
+  `postActivity` write-throughs from `feedStore.prepend`; `listFeed` reads payloads newest
+  first; RLS limits to visible spots. Verified live.
+- `new_spot` stays in the `FeedItem` union — it's used by **notifications**, not the feed
+  (the feed never emits it; `postActivity` skips it defensively). Not a feed concern.
+- Minor: no per-kind `check` constraint on `activity` (payload is the source of truth).
 
 ## Contract clean-ups
 - **`extraAttendees`** is declared "server-owned" (omitted from `NewHang`, forced to 0) but

@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 
-import { createDefaultFeedRepository } from '@/data/mock/feedSeed';
 import { HANGS } from '@/data/mock/hangSeed';
 import { crewFriendIds } from '@/data/mock/profile';
 import { mockSaveCount } from '@/data/mock/stats';
+import { createFeedRepository } from '@/data/repositories';
 import type { FeedRepository } from '@/data/FeedRepository';
 import { visibleFeed } from '@/domain/feedView';
 import type { FeedItem } from '@/domain/models';
@@ -11,7 +11,7 @@ import { hangCountForSpot } from '@/domain/spotStats';
 import { useCrewStore } from '@/store/crewStore';
 import { useProfileStore } from '@/store/profileStore';
 
-const repo: FeedRepository = createDefaultFeedRepository();
+const repo: FeedRepository = createFeedRepository();
 
 /** Fill new-spot cards with real hang counts (from the ledger) and save counts. */
 function withStats(items: FeedItem[]): FeedItem[] {
@@ -40,7 +40,10 @@ export const useFeedStore = create<FeedState>((set) => ({
   items: [],
   loaded: false,
   error: null,
-  prepend: (item) => set((s) => ({ items: [item, ...s.items] })),
+  prepend: (item) => {
+    set((s) => ({ items: [item, ...s.items] }));
+    void repo.postActivity(item);
+  },
   load: async () => {
     const res = await repo.listFeed();
     if (!res.ok) {

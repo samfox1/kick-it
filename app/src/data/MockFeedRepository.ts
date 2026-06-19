@@ -10,4 +10,9 @@ export class MockFeedRepository implements FeedRepository {
   async listFeed(params?: PageParams): Promise<Result<Page<FeedItem>>> {
     return ok(paginate(this.items, params));
   }
+
+  // No-op: the mock feed lives in the store for the session (ephemeral).
+  async postActivity(_item: FeedItem): Promise<Result<void>> {
+    return ok(undefined);
+  }
 }

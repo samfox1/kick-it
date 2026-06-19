@@ -1,5 +1,7 @@
+import { createDefaultFeedRepository } from '@/data/mock/feedSeed';
 import { createDefaultHangRepository } from '@/data/mock/hangSeed';
 import { createDefaultSpotRepository } from '@/data/mock/seed';
+import type { FeedRepository } from '@/data/FeedRepository';
 import type { HangRepository } from '@/data/HangRepository';
 import type { SpotRepository } from '@/data/SpotRepository';
 
@@ -32,4 +34,15 @@ export function createHangRepository(): HangRepository {
     return new SupabaseHangRepository(supabase);
   }
   return createDefaultHangRepository();
+}
+
+export function createFeedRepository(): FeedRepository {
+  if (usingSupabase) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { SupabaseFeedRepository } = require('@/data/supabase/SupabaseFeedRepository');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { supabase } = require('@/data/supabase/client');
+    return new SupabaseFeedRepository(supabase);
+  }
+  return createDefaultFeedRepository();
 }

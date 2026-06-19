@@ -5,4 +5,6 @@ import type { Result } from './result';
 /** Narrow contract for the activity feed. Swap the mock for a backend later — screens unchanged. */
 export interface FeedRepository {
   listFeed(params?: PageParams): Promise<Result<Page<FeedItem>>>;
+  /** Record an activity (hang logged / spot ranked) to the feed. */
+  postActivity(item: FeedItem): Promise<Result<void>>;
 }
