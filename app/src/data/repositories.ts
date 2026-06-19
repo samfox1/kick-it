@@ -6,10 +6,10 @@ import type { SpotRepository } from '@/data/SpotRepository';
  * .env.local to use the live Supabase backend. Keeping this behind a flag lets the
  * backend be swapped in incrementally and reversibly.
  */
-const useSupabase = process.env.EXPO_PUBLIC_USE_SUPABASE === 'true';
+export const usingSupabase = process.env.EXPO_PUBLIC_USE_SUPABASE === 'true';
 
 export function createSpotRepository(): SpotRepository {
-  if (useSupabase) {
+  if (usingSupabase) {
     // Lazy-loaded so the RN-only Supabase client is never imported under the mock
     // (or in tests, which would crash on the native polyfills).
     // eslint-disable-next-line @typescript-eslint/no-require-imports

@@ -38,6 +38,19 @@ describe('profileStore.updateProfile', () => {
   });
 });
 
+describe('profileStore.hydrate', () => {
+  it('replaces the member identity (e.g. with the authenticated user)', () => {
+    useProfileStore.getState().hydrate({ id: 'uuid-123', name: 'Sam Fox', initial: 'S' });
+    expect(useProfileStore.getState().member).toEqual({
+      id: 'uuid-123',
+      name: 'Sam Fox',
+      initial: 'S',
+    });
+    expect(isMe('uuid-123')).toBe(true);
+    expect(isMe('sam')).toBe(false);
+  });
+});
+
 describe('isMe', () => {
   it('matches the current user id, nothing else', () => {
     expect(isMe('sam')).toBe(true);

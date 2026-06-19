@@ -12,6 +12,8 @@ interface ProfileState {
   member: Member;
   handle: string;
   updateProfile: (patch: { name?: string; handle?: string }) => void;
+  /** Replace the identity wholesale (e.g. hydrate from the authenticated session). */
+  hydrate: (member: Member) => void;
 }
 
 export const useProfileStore = create<ProfileState>((set) => ({
@@ -28,6 +30,7 @@ export const useProfileStore = create<ProfileState>((set) => ({
         handle: trimmedHandle || s.handle,
       };
     }),
+  hydrate: (member) => set({ member }),
 }));
 
 /** Whether `id` is the current user — the single place that answers "is this me?". */
