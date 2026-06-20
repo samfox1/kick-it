@@ -10,5 +10,6 @@ appId: ${MAESTRO_APP_ID}
 - assertVisible: 'Rank this spot'
 - tapOn: 'Rank this spot'
 - assertVisible: 'Create an account' # the require-account prompt
+- takeScreenshot: 02-gate-prompt
 - tapOn: 'Not now'
 - assertVisible: 'Rank this spot' # dismissed, still on the spot (didn't navigate to /rank)

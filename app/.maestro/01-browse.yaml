@@ -4,10 +4,12 @@ appId: ${MAESTRO_APP_ID}
 - launchApp
 - tapOn: 'Explore'
 - assertVisible: 'Public' # the public/crew toggle on Explore
+- takeScreenshot: 01-explore
 # Open the top card of the swipe deck (center tap — cards have no stable text id).
 - tapOn:
     point: 50%, 42%
 - assertVisible: 'The Hang Ledger' # we landed on a spot detail
 - assertVisible: 'Rank this spot'
+- takeScreenshot: 01-spot-detail
 - back
 - assertVisible: 'Public' # back on Explore
