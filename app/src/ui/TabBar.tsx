@@ -15,6 +15,14 @@ const ICONS: Record<string, LucideIcon> = {
   profile: User,
 };
 
+/** Friendly names for the icon-only tabs (screen readers + UI tests). */
+const TAB_LABELS: Record<string, string> = {
+  feed: 'Feed',
+  explore: 'Explore',
+  spots: 'Spots',
+  profile: 'Profile',
+};
+
 /** A nav icon that springs up + reveals a dot when it becomes the active tab. */
 function TabIcon({ Icon, focused }: { Icon: LucideIcon; focused: boolean }) {
   const a = useRef(new Animated.Value(focused ? 1 : 0)).current;
@@ -80,6 +88,7 @@ export function TabBar({ state, navigation }: TabBarProps) {
       <Pressable
         key={name}
         accessibilityRole="button"
+        accessibilityLabel={TAB_LABELS[name] ?? name}
         accessibilityState={{ selected: focused }}
         onPress={() => navigation.navigate(route.name)}
         style={styles.tab}
