@@ -4,6 +4,7 @@ import { createElement, useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useRequireAccount } from '@/lib/useRequireAccount';
 import { useUiStore } from '@/store/uiStore';
 import { colors, hardShadow, inkBorder } from '@/theme/tokens';
 
@@ -50,6 +51,7 @@ export interface TabBarProps {
 /** Floating white pill nav with a blue center "+" that opens the Add flow. */
 export function TabBar({ state, navigation }: TabBarProps) {
   const router = useRouter();
+  const requireAccount = useRequireAccount();
   const insets = useSafeAreaInsets();
   const hidden = useUiStore((s) => s.tabBarHidden);
   const setHidden = useUiStore((s) => s.setTabBarHidden);
@@ -95,7 +97,9 @@ export function TabBar({ state, navigation }: TabBarProps) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Add a spot"
-          onPress={() => router.push('/add')}
+          onPress={() => {
+            if (requireAccount('Sign in to add a spot.')) router.push('/add');
+          }}
           style={styles.plus}
         >
           <Plus size={24} color="#fff" strokeWidth={2.4} />

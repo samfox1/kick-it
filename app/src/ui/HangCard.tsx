@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Hang, Member, ReactionKey } from '@/domain/models';
 import { haptics } from '@/lib/haptics';
+import { useRequireAccount } from '@/lib/useRequireAccount';
 import { useCrewStore } from '@/store/crewStore';
 import { useHangsStore } from '@/store/hangsStore';
 import { useProfileStore } from '@/store/profileStore';
@@ -51,9 +52,11 @@ export function HangCard({
 }) {
   const active = useHangsStore((s) => s.reactions[hang.id]);
   const toggleReaction = useHangsStore((s) => s.toggleReaction);
+  const requireAccount = useRequireAccount();
   const isOn = (key: ReactionKey) => active?.[key] ?? false;
 
   const toggle = (key: ReactionKey) => {
+    if (!requireAccount('Sign in to react to hangs.')) return;
     if (!isOn(key)) haptics.bump();
     toggleReaction(hang.id, key);
   };

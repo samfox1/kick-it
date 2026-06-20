@@ -20,6 +20,7 @@ import type { Spot } from '@/domain/models';
 import { topEndorsed } from '@/domain/vouch';
 import { haptics } from '@/lib/haptics';
 import { useLocationPermission } from '@/lib/useLocation';
+import { useRequireAccount } from '@/lib/useRequireAccount';
 import { useSpotsStore } from '@/store/spotsStore';
 import { colors, font, hardShadow, inkBorder, pressedStyle, radii } from '@/theme/tokens';
 import { AccessSticker } from '@/ui/AccessSticker';
@@ -76,6 +77,7 @@ function DeckCard({ spot, top, onOpen }: { spot: Spot; top: boolean; onOpen?: ()
 
 export default function ExploreScreen() {
   const router = useRouter();
+  const requireAccount = useRequireAccount();
   const { local, mine, saved, loaded, load, preferences, setMaxDistance, toggleNonNegotiable } =
     useSpotsStore();
   const { state: locationState, request } = useLocationPermission();
@@ -115,6 +117,15 @@ export default function ExploreScreen() {
   const forceSwipe = (dir: 'left' | 'right') => {
     // Swipe right (or the bookmark) saves the spot to your collection; left passes.
     if (dir === 'right' && topSpotRef.current) {
+      // Saving is a write — guests get prompted to sign in and the card snaps back.
+      if (!requireAccount('Sign in to save spots.')) {
+        Animated.spring(pan, {
+          toValue: { x: 0, y: 0 },
+          friction: 6,
+          useNativeDriver: false,
+        }).start();
+        return;
+      }
       useSpotsStore.getState().saveSpot(topSpotRef.current);
       haptics.success();
       flashSavedToast();
@@ -320,7 +331,8 @@ export default function ExploreScreen() {
                     accessibilityLabel="Log a hang here"
                     onPress={() => {
                       const t = topSpotRef.current;
-                      if (t) router.push({ pathname: '/add', params: { spotId: t.id } });
+                      if (t && requireAccount('Sign in to log a hang.'))
+                        router.push({ pathname: '/add', params: { spotId: t.id } });
                     }}
                   >
                     <Plus size={30} color="#fff" strokeWidth={2.6} />

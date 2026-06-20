@@ -67,9 +67,13 @@ catch mock/prod drift. (4) `AttendeeSnapshot` type for the jsonb (vs reusing `Me
 - **Dashboard setup required:** enable the Email provider; set the Magic Link email template to
   include `{{ .Token }}` so it sends a code (not just a link). For dev, turning OFF "Confirm
   email" makes verify immediate.
-- TODO: **guest→account data carryover** — signing in switches to the email account; anonymous
-  guest data is NOT merged (would need `updateUser({email})` link-in-place, type `email_change`).
-  Also future: Apple/phone providers (need dev build / SMS provider).
+- **Write-gating (done):** browsing is open; every write (rank, log hang, save, react, add spot,
+  endorse) is gated behind a real account via `useRequireAccount` — guests get an Alert → /auth.
+  Mock mode and signed-in users pass through. This removes the guest-carryover problem (guests
+  can't write) and the anon-write spam vector.
+- TODO: **server-side enforcement** — also block anonymous writes in RLS (defense in depth;
+  client gating is the UX, not the security boundary).
+- TODO: Apple/phone providers (need dev build / SMS provider).
 
 ## Crew — deferred by design
 - Crew is inherently multi-user; with a single real account a faithful cutover is an empty

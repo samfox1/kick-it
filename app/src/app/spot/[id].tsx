@@ -8,6 +8,7 @@ import { isMe } from '@/store/profileStore';
 import { spotGallery } from '@/domain/models';
 import { haptics } from '@/lib/haptics';
 import { useHangDelete } from '@/lib/useHangDelete';
+import { useRequireAccount } from '@/lib/useRequireAccount';
 import { useHangsStore } from '@/store/hangsStore';
 import { useSpotsStore } from '@/store/spotsStore';
 import { useSpotDetail } from '@/store/useSpotDetail';
@@ -49,6 +50,7 @@ export default function SpotDetailScreen() {
   const { requestDelete, confirmProps } = useHangDelete();
   const endorsements = useSpotsStore((s) => s.endorsements);
   const toggleEndorsement = useSpotsStore((s) => s.toggleEndorsement);
+  const requireAccount = useRequireAccount();
   const scrollY = useRef(new Animated.Value(0)).current;
 
   if (loading) {
@@ -77,10 +79,11 @@ export default function SpotDetailScreen() {
   const toggleSave = () => {
     if (isSaved) {
       unsaveSpot(spot.id);
-    } else {
-      saveSpot(spot);
-      haptics.bump();
+      return;
     }
+    if (!requireAccount('Sign in to save spots.')) return;
+    saveSpot(spot);
+    haptics.bump();
   };
 
   const heroParallax = {
@@ -166,7 +169,10 @@ export default function SpotDetailScreen() {
 
           <Pressable
             style={({ pressed }) => [styles.rankBtn, pressed && pressedStyle]}
-            onPress={() => router.push({ pathname: '/rank', params: { spotId: spot.id } })}
+            onPress={() => {
+              if (requireAccount('Sign in to rank spots.'))
+                router.push({ pathname: '/rank', params: { spotId: spot.id } });
+            }}
           >
             <ListOrdered size={18} color={colors.ink} strokeWidth={2.2} />
             <Text style={styles.rankBtnText}>
@@ -185,7 +191,10 @@ export default function SpotDetailScreen() {
                   id={cid}
                   count={(spot.vouchCounts?.[cid] ?? 0) + (on ? 1 : 0)}
                   endorsed={on}
-                  onPress={() => toggleEndorsement(spot.id, cid)}
+                  onPress={() => {
+                    if (requireAccount('Sign in to vouch for a spot.'))
+                      toggleEndorsement(spot.id, cid);
+                  }}
                 />
               );
             })}
@@ -197,7 +206,10 @@ export default function SpotDetailScreen() {
           </View>
           <Pressable
             style={styles.logBtn}
-            onPress={() => router.push({ pathname: '/add', params: { spotId: spot.id } })}
+            onPress={() => {
+              if (requireAccount('Sign in to log a hang.'))
+                router.push({ pathname: '/add', params: { spotId: spot.id } });
+            }}
           >
             <Plus size={18} color="#fff" strokeWidth={2.4} />
             <Text style={styles.logBtnText}>Log a hang here</Text>
