@@ -7,9 +7,12 @@ import { useHangsStore } from '@/store/hangsStore';
 import { useProfileStore } from '@/store/profileStore';
 import { useSpotsStore } from '@/store/spotsStore';
 
-/** Reload all per-user collections after the identity changes (sign in/out). */
+/** Reload all per-user collections after the identity changes (sign in/out). Clears every
+ *  identity-scoped store first so a failed reload can never leave the prior account's data. */
 async function refreshForIdentity(): Promise<void> {
-  useHangsStore.setState({ hangs: [], reactions: {} });
+  useSpotsStore.getState().reset();
+  useHangsStore.getState().reset();
+  useFeedStore.getState().reset();
   await Promise.all([useSpotsStore.getState().load(), useFeedStore.getState().load()]);
   await Promise.all([
     useHangsStore.getState().loadMine(),

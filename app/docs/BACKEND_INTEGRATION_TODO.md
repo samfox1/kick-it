@@ -77,6 +77,18 @@ catch mock/prod drift. (4) `AttendeeSnapshot` type for the jsonb (vs reusing `Me
   but content writes are blocked at the DB (verified: anon insert → 42501). Profiles/preferences
   intentionally stay writable for the anonymous bootstrap + filters.
 - TODO: Apple/phone providers (need dev build / SMS provider).
+- TODO (from review): derive an explicit `isSignedIn` instead of overloading `profileStore.email`
+  (the Apple/phone path may have no email), and rehydrate signed-in state on cold start (a real
+  persisted session currently shows as guest until re-login). Low today, matters for the roadmap.
+
+## Post-review hardening (2026-06-20)
+- Identity-change now clears every per-user store (`spotsStore/hangsStore/feedStore.reset()`)
+  before reloading, and `spotsStore.load` clears collections on error — fixes a cross-user
+  spot leak when a reload failed mid sign-in/out.
+- `auth.tsx` verify/send wrapped so `busy` can't stick; `_layout` bootstrap has a `.catch` so a
+  thrown error can't hang the launch on a blank screen.
+- RLS `is_real_user()` extended to USING (0006) so anon can't DELETE either; latent crew
+  policies locked. `reportFailure` moved out of pure `result.ts` to `store/optimistic.ts`.
 
 ## Crew — deferred by design
 - Crew is inherently multi-user; with a single real account a faithful cutover is an empty

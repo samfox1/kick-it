@@ -2,7 +2,8 @@ import { create } from 'zustand';
 
 import { createSpotRepository } from '@/data/repositories';
 import type { SpotRepository } from '@/data/SpotRepository';
-import { reportFailure, type Result } from '@/data/result';
+import type { Result } from '@/data/result';
+import { reportFailure } from '@/store/optimistic';
 import { rankingToFeedItem } from '@/domain/feedItem';
 import type { NewSpot, Preferences, Spot } from '@/domain/models';
 import { applyRankScores, sortByScoreDesc } from '@/domain/ranking';
@@ -44,6 +45,8 @@ interface SpotsState {
   /** The user's own characteristic endorsements, keyed by spot id then characteristic id. */
   endorsements: Record<string, Record<string, boolean>>;
   toggleEndorsement: (spotId: string, characteristicId: string) => void;
+  /** Clear all per-user collections (e.g. on an identity change). */
+  reset: () => void;
 }
 
 export const useSpotsStore = create<SpotsState>((set, get) => ({
@@ -62,12 +65,13 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
       repo.listMine(),
       repo.listSaved(),
     ]);
+    // On failure, clear collections too — never leave a previous identity's spots on screen.
     if (!localRes.ok) {
-      set({ loaded: true, error: localRes.error.message });
+      set({ local: [], mine: [], saved: [], loaded: true, error: localRes.error.message });
       return;
     }
     if (!mineRes.ok) {
-      set({ loaded: true, error: mineRes.error.message });
+      set({ local: [], mine: [], saved: [], loaded: true, error: mineRes.error.message });
       return;
     }
     // Establish rank order from the seed's scores, then derive clean band scores so
@@ -150,4 +154,6 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
         },
       };
     }),
+
+  reset: () => set({ local: [], mine: [], saved: [], endorsements: {}, loaded: false }),
 }));

@@ -5,8 +5,7 @@ appId: ${MAESTRO_APP_ID}
 ---
 - launchApp
 - tapOn: 'Explore'
-- tapOn:
-    point: 50%, 42% # open the top deck card
+- tapOn: 'Open this spot' # top deck card (a11y label)
 - assertVisible: 'Rank this spot'
 - tapOn: 'Rank this spot'
 - assertVisible: 'Create an account' # the require-account prompt

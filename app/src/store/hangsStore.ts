@@ -4,7 +4,8 @@ import { HANGS } from '@/data/mock/hangSeed';
 import { createHangRepository, usingSupabase } from '@/data/repositories';
 import type { Hang, NewHang, ReactionKey } from '@/domain/models';
 import { hangToFeedItem } from '@/domain/feedItem';
-import { reportFailure, type Result } from '@/data/result';
+import type { Result } from '@/data/result';
+import { reportFailure } from '@/store/optimistic';
 import { useFeedStore } from '@/store/feedStore';
 import { useProfileStore } from '@/store/profileStore';
 import { useSpotsStore } from '@/store/spotsStore';
@@ -45,6 +46,8 @@ interface HangsState {
   toggleReaction: (hangId: string, key: ReactionKey) => void;
   /** Log a new hang: persists via the repo, prepends to the ledger, and posts to the feed. */
   logHang: (draft: NewHang) => Promise<Result<Hang>>;
+  /** Clear the cache (e.g. on an identity change). */
+  reset: () => void;
 }
 
 export const useHangsStore = create<HangsState>((set, get) => ({
@@ -101,4 +104,6 @@ export const useHangsStore = create<HangsState>((set, get) => ({
     }
     return res;
   },
+
+  reset: () => set({ hangs: [], reactions: {} }),
 }));

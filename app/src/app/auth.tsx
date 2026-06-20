@@ -17,31 +17,44 @@ export default function AuthScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const send = async () => {
+    if (busy) return;
     const trimmed = email.trim().toLowerCase();
     if (!trimmed.includes('@')) return setError('Enter a valid email.');
     setBusy(true);
     setError(null);
-    const res = await sendEmailOtp(trimmed);
-    setBusy(false);
-    if (res.ok) {
-      setEmail(trimmed);
-      setStep('code');
-    } else {
-      setError(res.error.message);
+    try {
+      const res = await sendEmailOtp(trimmed);
+      if (res.ok) {
+        setEmail(trimmed);
+        setStep('code');
+      } else {
+        setError(res.error.message);
+      }
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setBusy(false);
     }
   };
 
   const verify = async () => {
+    if (busy) return;
     if (code.trim().length < 6) return setError('Enter the 6-digit code.');
     setBusy(true);
     setError(null);
-    const res = await verifyEmailOtp(email, code.trim());
-    if (!res.ok) {
+    try {
+      const res = await verifyEmailOtp(email, code.trim());
+      if (!res.ok) {
+        setError(res.error.message);
+        setBusy(false);
+        return;
+      }
+      await completeSignIn(res.value.member, res.value.email);
+      router.back(); // success → modal unmounts; no need to reset busy
+    } catch {
+      setError('Something went wrong. Please try again.');
       setBusy(false);
-      return setError(res.error.message);
     }
-    await completeSignIn(res.value.member, res.value.email);
-    router.back();
   };
 
   return (
@@ -64,7 +77,7 @@ export default function AuthScreen() {
           <>
             <Text style={styles.title}>What&apos;s your email?</Text>
             <Text style={styles.sub}>
-              We&apos;ll text you a 6-digit code to sign in or create your account.
+              We&apos;ll email you a 6-digit code to sign in or create your account.
             </Text>
             <TextInput
               style={styles.input}

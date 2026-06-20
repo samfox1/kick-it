@@ -42,6 +42,7 @@ function DeckCard({ spot, top, onOpen }: { spot: Spot; top: boolean; onOpen?: ()
       style={({ pressed }) => [styles.card, pressed && top && pressedStyle]}
       onPress={onOpen}
       disabled={!top}
+      accessibilityLabel={top ? 'Open this spot' : undefined}
     >
       <Image
         source={{ uri: spot.image }}

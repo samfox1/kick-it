@@ -32,11 +32,13 @@ export default function RootLayout() {
   useEffect(() => {
     if (!usingSupabase) return;
     const { member, hydrate } = useProfileStore.getState();
-    ensureSession({ name: member.name, initial: member.initial }).then((res) => {
-      if (res.ok) hydrate(res.value);
-      else console.warn('Session bootstrap failed:', res.error.message);
-      setSessionReady(true);
-    });
+    ensureSession({ name: member.name, initial: member.initial })
+      .then((res) => {
+        if (res.ok) hydrate(res.value);
+        else console.warn('Session bootstrap failed:', res.error.message);
+      })
+      .catch((e) => console.warn('Session bootstrap threw:', e))
+      .finally(() => setSessionReady(true));
   }, []);
 
   if (!loaded || !sessionReady) return null;
