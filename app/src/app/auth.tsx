@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Mail } from 'lucide-react-native';
+import { Mail, X } from 'lucide-react-native';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -46,12 +46,13 @@ export default function AuthScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
+      <View style={styles.handle} />
       <View style={styles.header}>
-        <Pressable style={styles.ico} onPress={() => router.back()}>
-          <ChevronLeft size={20} color={colors.ink} strokeWidth={2} />
-        </Pressable>
-        <Text style={styles.headerTitle}>{step === 'email' ? 'Sign in' : 'Enter code'}</Text>
         <View style={{ width: 38 }} />
+        <Text style={styles.headerTitle}>{step === 'email' ? 'Sign in' : 'Enter code'}</Text>
+        <Pressable style={styles.ico} onPress={() => router.back()} accessibilityLabel="Close">
+          <X size={20} color={colors.ink} strokeWidth={2} />
+        </Pressable>
       </View>
 
       <View style={styles.body}>
@@ -121,6 +122,14 @@ export default function AuthScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.paper },
+  handle: {
+    width: 40,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.soft,
+    alignSelf: 'center',
+    marginTop: 8,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
