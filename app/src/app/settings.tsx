@@ -4,8 +4,10 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleHelp,
+  LogIn,
   Lock,
   LogOut,
+  Mail,
   MapPin,
   Share2,
   Star,
@@ -16,7 +18,10 @@ import { type ReactNode, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { usingSupabase } from '@/data/repositories';
+import { signOutToGuest } from '@/lib/authFlow';
 import { shareInvite } from '@/lib/invite';
+import { useProfileStore } from '@/store/profileStore';
 import { colors, font, hardShadow, inkBorder, radii } from '@/theme/tokens';
 
 function Row({
@@ -47,6 +52,16 @@ export default function SettingsScreen() {
   const [notifications, setNotifications] = useState(true);
   const [location, setLocation] = useState(true);
   const [privateProfile, setPrivateProfile] = useState(false);
+  const email = useProfileStore((s) => s.email);
+  const [signingOut, setSigningOut] = useState(false);
+
+  const onSignOut = async () => {
+    if (!usingSupabase) return router.replace('/');
+    setSigningOut(true);
+    await signOutToGuest();
+    setSigningOut(false);
+    router.back();
+  };
 
   const toggle = (v: boolean, set: (b: boolean) => void) => (
     <Switch
@@ -70,6 +85,22 @@ export default function SettingsScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.group}>Account</Text>
         <View style={styles.card}>
+          {usingSupabase &&
+            (email ? (
+              <>
+                <Row icon={<Mail size={18} color={colors.ink} strokeWidth={2} />} label={email} />
+                <View style={styles.divider} />
+              </>
+            ) : (
+              <>
+                <Row
+                  icon={<LogIn size={18} color={colors.ink} strokeWidth={2} />}
+                  label="Sign in or create account"
+                  onPress={() => router.push('/auth')}
+                />
+                <View style={styles.divider} />
+              </>
+            ))}
           <Row
             icon={<UserPen size={18} color={colors.ink} strokeWidth={2} />}
             label="Edit profile"
@@ -125,10 +156,16 @@ export default function SettingsScreen() {
           />
         </View>
 
-        <Pressable style={styles.signOut} onPress={() => router.replace('/')}>
-          <LogOut size={18} color={colors.like} strokeWidth={2} />
-          <Text style={styles.signOutText}>Sign out</Text>
-        </Pressable>
+        {(!usingSupabase || email) && (
+          <Pressable
+            style={[styles.signOut, signingOut && { opacity: 0.6 }]}
+            onPress={onSignOut}
+            disabled={signingOut}
+          >
+            <LogOut size={18} color={colors.like} strokeWidth={2} />
+            <Text style={styles.signOutText}>{signingOut ? 'Signing out…' : 'Sign out'}</Text>
+          </Pressable>
+        )}
 
         <Text style={styles.version}>Kick It v1.0.0 · mock build</Text>
       </ScrollView>

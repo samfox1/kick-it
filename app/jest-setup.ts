@@ -2,6 +2,10 @@
 // React Native Testing Library auto-extends Jest matchers (v12.4+), so no import needed.
 // Add global mocks for native/Expo modules here as screens start needing them.
 
+// Never load the native Supabase client in tests (AsyncStorage/url-polyfill/env). Screen
+// code imports it transitively; this uses the manual mock in src/data/supabase/__mocks__.
+jest.mock('@/data/supabase/client');
+
 // Haptics are fire-and-forget side effects; no-op them in tests.
 jest.mock('expo-haptics', () => ({
   impactAsync: jest.fn(),

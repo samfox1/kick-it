@@ -11,14 +11,19 @@ import type { Member } from '@/domain/models';
 interface ProfileState {
   member: Member;
   handle: string;
+  /** The signed-in account's email, or null when browsing as an anonymous guest. */
+  email: string | null;
   updateProfile: (patch: { name?: string; handle?: string }) => void;
   /** Replace the identity wholesale (e.g. hydrate from the authenticated session). */
   hydrate: (member: Member) => void;
+  /** Set the signed-in email (null = guest). */
+  setEmail: (email: string | null) => void;
 }
 
 export const useProfileStore = create<ProfileState>((set) => ({
   member: CURRENT_MEMBER,
   handle: CURRENT_USER.handle,
+  email: null,
   updateProfile: ({ name, handle }) =>
     set((s) => {
       const trimmedName = name?.trim();
@@ -31,6 +36,7 @@ export const useProfileStore = create<ProfileState>((set) => ({
       };
     }),
   hydrate: (member) => set({ member }),
+  setEmail: (email) => set({ email }),
 }));
 
 /** Whether `id` is the current user — the single place that answers "is this me?". */

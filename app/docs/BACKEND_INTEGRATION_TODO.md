@@ -59,6 +59,18 @@ catch mock/prod drift. (4) `AttendeeSnapshot` type for the jsonb (vs reusing `Me
 - Feed visibility uses the hydrated identity (`crewFriendIds(selfId, ...)`), so your own
   friends-only items show.
 
+## Auth — email OTP (done 2026-06-20)
+- `sendEmailOtp`/`verifyEmailOtp`/`signOut` (`data/supabase/auth.ts`); 6-digit code via
+  `signInWithOtp` + `verifyOtp(type:'email')`. Auth screen at `app/auth.tsx`; entry + real
+  sign-out in Settings (gated on `usingSupabase`). `authFlow` reloads per-user data on sign
+  in/out; `profileStore.email` tracks guest vs signed-in.
+- **Dashboard setup required:** enable the Email provider; set the Magic Link email template to
+  include `{{ .Token }}` so it sends a code (not just a link). For dev, turning OFF "Confirm
+  email" makes verify immediate.
+- TODO: **guest→account data carryover** — signing in switches to the email account; anonymous
+  guest data is NOT merged (would need `updateUser({email})` link-in-place, type `email_change`).
+  Also future: Apple/phone providers (need dev build / SMS provider).
+
 ## Crew — deferred by design
 - Crew is inherently multi-user; with a single real account a faithful cutover is an empty
   crew (accept/deny/invite have no one to act on). Kept as local display data until there is

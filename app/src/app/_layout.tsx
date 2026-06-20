@@ -48,6 +48,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#fff' } }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="add" />
+          <Stack.Screen name="auth" />
           <Stack.Screen name="rank" />
           <Stack.Screen name="spot/[id]" />
         </Stack>

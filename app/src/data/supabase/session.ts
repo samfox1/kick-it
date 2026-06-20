@@ -11,7 +11,38 @@ export async function currentUserId(db: SupabaseClient): Promise<string | null> 
   return data.user?.id ?? null;
 }
 
-type ProfileDefaults = { name: string; initial: string };
+export type ProfileDefaults = { name: string; initial: string };
+
+/**
+ * Ensure a `profiles` row exists for the user and return their Member. Creates it only
+ * if missing (ignoreDuplicates), so an edited name isn't overwritten. Shared by the
+ * anonymous launch bootstrap and the email sign-in flow.
+ */
+export async function ensureProfile(
+  userId: string,
+  defaults: ProfileDefaults,
+): Promise<Result<Member>> {
+  const { error: upsertError } = await supabase
+    .from('profiles')
+    .upsert(
+      { id: userId, name: defaults.name, initial: defaults.initial },
+      { onConflict: 'id', ignoreDuplicates: true },
+    );
+  if (upsertError) return fail('network', upsertError.message);
+
+  const { data: profile, error: readError } = await supabase
+    .from('profiles')
+    .select('name, initial')
+    .eq('id', userId)
+    .maybeSingle();
+  if (readError) return fail('network', readError.message);
+
+  return ok({
+    id: userId,
+    name: profile?.name ?? defaults.name,
+    initial: profile?.initial ?? defaults.initial,
+  });
+}
 
 let inflight: Promise<Result<Member>> | null = null;
 
@@ -43,26 +74,5 @@ async function run(defaults: ProfileDefaults): Promise<Result<Member>> {
     userId = data.user.id;
   }
 
-  // Create the profile only if missing (ignoreDuplicates), so an edited name
-  // isn't overwritten on every launch.
-  const { error: upsertError } = await supabase
-    .from('profiles')
-    .upsert(
-      { id: userId, name: defaults.name, initial: defaults.initial },
-      { onConflict: 'id', ignoreDuplicates: true },
-    );
-  if (upsertError) return fail('network', upsertError.message);
-
-  const { data: profile, error: readError } = await supabase
-    .from('profiles')
-    .select('name, initial')
-    .eq('id', userId)
-    .maybeSingle();
-  if (readError) return fail('network', readError.message);
-
-  return ok({
-    id: userId,
-    name: profile?.name ?? defaults.name,
-    initial: profile?.initial ?? defaults.initial,
-  });
+  return ensureProfile(userId, defaults);
 }
