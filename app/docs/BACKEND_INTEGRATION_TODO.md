@@ -71,8 +71,11 @@ catch mock/prod drift. (4) `AttendeeSnapshot` type for the jsonb (vs reusing `Me
   endorse) is gated behind a real account via `useRequireAccount` — guests get an Alert → /auth.
   Mock mode and signed-in users pass through. This removes the guest-carryover problem (guests
   can't write) and the anon-write spam vector.
-- TODO: **server-side enforcement** — also block anonymous writes in RLS (defense in depth;
-  client gating is the UX, not the security boundary).
+- **Server-side enforcement (done, 0005):** `is_real_user()` (checks the JWT `is_anonymous`
+  claim) added to the WITH CHECK of every content-write policy (spots/hangs/rankings/saved/
+  endorsements/reactions/activity). Guests can read + bootstrap a profile + set browse prefs,
+  but content writes are blocked at the DB (verified: anon insert → 42501). Profiles/preferences
+  intentionally stay writable for the anonymous bootstrap + filters.
 - TODO: Apple/phone providers (need dev build / SMS provider).
 
 ## Crew — deferred by design
