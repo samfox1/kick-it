@@ -90,6 +90,15 @@ catch mock/prod drift. (4) `AttendeeSnapshot` type for the jsonb (vs reusing `Me
 - RLS `is_real_user()` extended to USING (0006) so anon can't DELETE either; latent crew
   policies locked. `reportFailure` moved out of pure `result.ts` to `store/optimistic.ts`.
 
+## Spot deletion — guarded, creator-only (done 2026-06-22)
+- `delete_own_spot(p_spot_id)` RPC (0007, SECURITY DEFINER): deletes only if caller is the
+  creator AND no one else has hung out / ranked / saved it (spots are communal + cascade, so a
+  blanket delete would wipe others' data). Raises NOT_OWNER / SPOT_HAS_ENGAGEMENT / SPOT_NOT_FOUND.
+- `Spot.creatorId` added (mapped from `spots.creator_id`); UI shows "Delete this spot" only to
+  the creator (branded ConfirmModal; friendly error if engagement blocks it).
+- Verified live: NOT_OWNER + SPOT_NOT_FOUND block; spot survives.
+- Future: genuinely bad/spam spots = moderation (admin), separate from this user-facing delete.
+
 ## Crew — deferred by design
 - Crew is inherently multi-user; with a single real account a faithful cutover is an empty
   crew (accept/deny/invite have no one to act on). Kept as local display data until there is

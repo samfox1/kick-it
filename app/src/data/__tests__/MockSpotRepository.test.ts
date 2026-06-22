@@ -82,6 +82,25 @@ describe('MockSpotRepository', () => {
     expect(unwrap(await repo2.listMine()).items.map((s) => s.id)).toEqual(['a', 'b']);
   });
 
+  it('createSpot stamps the current user as creator', async () => {
+    const repo2 = new MockSpotRepository({ local: [], mine: [] });
+    const created = unwrap(await repo2.createSpot(spotDraft));
+    expect(created.creatorId).toBe('sam');
+  });
+
+  it('deleteSpot removes the spot from every collection', async () => {
+    const repo2 = new MockSpotRepository({
+      local: [makeSpot({ id: 'l1' })],
+      mine: [makeSpot({ id: 'm1' })],
+    });
+    await repo2.saveSpot('l1');
+    await repo2.deleteSpot('l1');
+    await repo2.deleteSpot('m1');
+    expect(unwrap(await repo2.listLocal()).items.map((s) => s.id)).toEqual([]);
+    expect(unwrap(await repo2.listMine()).items.map((s) => s.id)).toEqual([]);
+    expect(unwrap(await repo2.listSaved()).items).toEqual([]);
+  });
+
   it('saveSpot/listSaved/unsaveSpot track bookmarks by id', async () => {
     const repo2 = new MockSpotRepository({
       local: [makeSpot({ id: 'l1' }), makeSpot({ id: 'l2' })],

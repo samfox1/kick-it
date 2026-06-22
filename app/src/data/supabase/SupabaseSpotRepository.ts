@@ -10,7 +10,7 @@ import { rowToSpot, type SpotRow } from './mappers';
 import { currentUserId } from './session';
 
 const COLUMNS =
-  'id, name, category, access, location, lat, lng, image, images, characteristic_ids, description';
+  'id, creator_id, name, category, access, location, lat, lng, image, images, characteristic_ids, description';
 
 /**
  * Supabase-backed SpotRepository. The client is injected so this stays unit-testable
@@ -104,5 +104,15 @@ export class SupabaseSpotRepository implements SpotRepository {
     // One transaction rewrites the whole order (see the set_rankings RPC migration).
     const { error } = await this.db.rpc('set_rankings', { p_spot_ids: spotIds });
     return error ? failFrom(error) : ok(undefined);
+  }
+
+  async deleteSpot(spotId: string): Promise<Result<void>> {
+    // Guarded server-side: creator-only, and only if no one else has engaged.
+    const { error } = await this.db.rpc('delete_own_spot', { p_spot_id: spotId });
+    if (!error) return ok(undefined);
+    if (error.message?.includes('SPOT_HAS_ENGAGEMENT')) {
+      return fail('unauthorized', "Can't delete — others have saved, ranked, or hung out here.");
+    }
+    return failFrom(error);
   }
 }

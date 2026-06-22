@@ -2,6 +2,7 @@ import { rowToHang, rowToSpot, timeAgo, type HangRow, type SpotRow } from '../ma
 
 const fullRow: SpotRow = {
   id: 'abc',
+  creator_id: 'user-1',
   name: 'Cool Spot',
   category: 'park',
   access: 'open',
@@ -18,6 +19,7 @@ describe('rowToSpot', () => {
   it('maps snake_case columns to the Spot domain shape', () => {
     expect(rowToSpot(fullRow)).toEqual({
       id: 'abc',
+      creatorId: 'user-1',
       name: 'Cool Spot',
       category: 'park',
       access: 'open',
@@ -36,6 +38,7 @@ describe('rowToSpot', () => {
   it('defaults nullable columns sensibly', () => {
     const sparse: SpotRow = {
       id: 'x',
+      creator_id: null,
       name: 'Bare',
       category: 'lot',
       access: 'friends',
@@ -48,6 +51,7 @@ describe('rowToSpot', () => {
       description: null,
     };
     const spot = rowToSpot(sparse);
+    expect(spot.creatorId).toBeUndefined();
     expect(spot.location).toBe('');
     expect(spot.lat).toBeUndefined();
     expect(spot.lng).toBeUndefined();

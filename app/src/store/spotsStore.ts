@@ -42,6 +42,8 @@ interface SpotsState {
   reorderMine: (ordered: Spot[]) => Promise<void>;
   /** Create a brand-new spot (id from the repo), then rank it at `index`. */
   addSpot: (draft: NewSpot, index: number) => Promise<Result<Spot>>;
+  /** Delete a spot you created (guarded server-side). Removes it from all collections on success. */
+  deleteSpot: (id: string) => Promise<Result<void>>;
   /** The user's own characteristic endorsements, keyed by spot id then characteristic id. */
   endorsements: Record<string, Record<string, boolean>>;
   toggleEndorsement: (spotId: string, characteristicId: string) => void;
@@ -141,6 +143,17 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
   addSpot: async (draft, index) => {
     const res = await repo.createSpot(draft);
     if (res.ok) await get().rankSpot(res.value, index);
+    return res;
+  },
+
+  deleteSpot: async (id) => {
+    const res = await repo.deleteSpot(id);
+    if (res.ok)
+      set((s) => ({
+        local: s.local.filter((x) => x.id !== id),
+        mine: s.mine.filter((x) => x.id !== id),
+        saved: s.saved.filter((x) => x.id !== id),
+      }));
     return res;
   },
 

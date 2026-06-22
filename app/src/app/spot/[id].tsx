@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Bookmark, ChevronLeft, ListOrdered, Plus, Waves } from 'lucide-react-native';
-import { useEffect, useRef } from 'react';
+import { Bookmark, ChevronLeft, ListOrdered, Plus, Trash2, Waves } from 'lucide-react-native';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -51,6 +51,9 @@ export default function SpotDetailScreen() {
   const endorsements = useSpotsStore((s) => s.endorsements);
   const toggleEndorsement = useSpotsStore((s) => s.toggleEndorsement);
   const requireAccount = useRequireAccount();
+  const deleteSpot = useSpotsStore((s) => s.deleteSpot);
+  const [confirmDeleteSpot, setConfirmDeleteSpot] = useState(false);
+  const [deleteErr, setDeleteErr] = useState<string | null>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
 
   if (loading) {
@@ -229,10 +232,38 @@ export default function SpotDetailScreen() {
               />
             );
           })}
+
+          {spot.creatorId && isMe(spot.creatorId) && (
+            <Pressable
+              style={({ pressed }) => [styles.deleteSpotBtn, pressed && pressedStyle]}
+              onPress={() => {
+                setDeleteErr(null);
+                setConfirmDeleteSpot(true);
+              }}
+            >
+              <Trash2 size={16} color={colors.like} strokeWidth={2.2} />
+              <Text style={styles.deleteSpotText}>Delete this spot</Text>
+            </Pressable>
+          )}
+          {deleteErr && <Text style={styles.deleteErr}>{deleteErr}</Text>}
         </View>
       </Animated.ScrollView>
 
       <ConfirmModal {...confirmProps} />
+      <ConfirmModal
+        visible={confirmDeleteSpot}
+        title="Delete this spot?"
+        message="This removes it from Kick It. You can only delete a spot you created that no one else has saved, ranked, or hung out at."
+        confirmLabel="Delete"
+        cancelLabel="Keep"
+        onCancel={() => setConfirmDeleteSpot(false)}
+        onConfirm={async () => {
+          setConfirmDeleteSpot(false);
+          const res = await deleteSpot(spot.id);
+          if (res.ok) router.back();
+          else setDeleteErr(res.error.message);
+        }}
+      />
     </View>
   );
 }
@@ -306,4 +337,23 @@ const styles = StyleSheet.create({
     ...hardShadow(4),
   },
   logBtnText: { fontFamily: font.extrabold, fontSize: 15, color: '#fff' },
+  deleteSpotBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    paddingVertical: 12,
+    borderRadius: radii.md,
+    marginTop: 24,
+    borderWidth: 2,
+    borderColor: colors.like,
+  },
+  deleteSpotText: { fontFamily: font.bold, fontSize: 14, color: colors.like },
+  deleteErr: {
+    fontFamily: font.semibold,
+    fontSize: 13,
+    color: colors.like,
+    textAlign: 'center',
+    marginTop: 10,
+  },
 });

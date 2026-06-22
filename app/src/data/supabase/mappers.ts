@@ -45,6 +45,7 @@ export function rowToHang(row: HangRow, now?: number): Hang {
 /** A `spots` table row (snake_case columns). */
 export type SpotRow = {
   id: string;
+  creator_id: string | null;
   name: string;
   category: string;
   access: AccessLevel;
@@ -64,6 +65,7 @@ export type SpotRow = {
 export function rowToSpot(row: SpotRow): Spot {
   return {
     id: row.id,
+    creatorId: row.creator_id ?? undefined,
     name: row.name,
     category: row.category,
     access: row.access,

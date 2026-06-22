@@ -14,6 +14,7 @@ jest.mock('@/data/mock/seed', () => {
       saveSpot: async () => ({ ok: true, value: undefined }),
       unsaveSpot: async () => ({ ok: true, value: undefined }),
       setRanking: async () => ({ ok: true, value: undefined }),
+      deleteSpot: async () => ({ ok: true, value: undefined }),
     }),
   };
 });

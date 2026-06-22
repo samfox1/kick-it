@@ -35,11 +35,13 @@ export interface Spot {
    *  (a backend returns it in the payload); absent on locally-built spots. */
   vouchCounts?: Record<string, number>;
   description?: string;
+  /** The user who created the spot. Server-owned; used to show creator-only actions. */
+  creatorId?: string;
 }
 
-/** Input to create a spot. `id` and `score` (derived from rank) and `vouchCounts`
- *  (attached by the repo) are not caller-supplied. */
-export type NewSpot = Omit<Spot, 'id' | 'score' | 'vouchCounts'>;
+/** Input to create a spot. `id` and `score` (derived from rank), `vouchCounts`
+ *  (attached by the repo), and `creatorId` (server-set) are not caller-supplied. */
+export type NewSpot = Omit<Spot, 'id' | 'score' | 'vouchCounts' | 'creatorId'>;
 
 /** A spot's photos as a gallery: the explicit `images`, else just the cover. */
 export function spotGallery(spot: Pick<Spot, 'image' | 'images'>): string[] {

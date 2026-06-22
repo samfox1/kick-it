@@ -1,4 +1,5 @@
 import type { NewSpot, Spot } from '../domain/models';
+import { CURRENT_MEMBER } from './mock/profile';
 import { mockVouchCounts } from './mock/stats';
 import { makeIdGenerator } from './mockId';
 import { paginate, type Page, type PageParams } from './page';
@@ -41,7 +42,7 @@ export class MockSpotRepository implements SpotRepository {
 
   async createSpot(input: NewSpot): Promise<Result<Spot>> {
     // id is server-owned; score is derived from rank by the store (placeholder here).
-    const spot: Spot = { ...input, id: this.nextId(), score: 0 };
+    const spot: Spot = { ...input, id: this.nextId(), score: 0, creatorId: CURRENT_MEMBER.id };
     this.seed.mine.unshift(spot);
     return ok(spot);
   }
@@ -68,6 +69,14 @@ export class MockSpotRepository implements SpotRepository {
   // No-op: the mock is ephemeral, so ranking order lives in the store during a session
   // and resets to the seed on reload. Only the Supabase repo persists ranking.
   async setRanking(_spotIds: string[]): Promise<Result<void>> {
+    return ok(undefined);
+  }
+
+  // Single-user mock: no other engagement possible, so just remove it everywhere.
+  async deleteSpot(spotId: string): Promise<Result<void>> {
+    this.seed.local = this.seed.local.filter((s) => s.id !== spotId);
+    this.seed.mine = this.seed.mine.filter((s) => s.id !== spotId);
+    this.savedIds.delete(spotId);
     return ok(undefined);
   }
 }

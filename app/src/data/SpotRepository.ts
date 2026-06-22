@@ -25,4 +25,6 @@ export interface SpotRepository {
   unsaveSpot(spotId: string): Promise<Result<void>>;
   /** Replace the current user's ranked order with exactly `spotIds` (index = position). */
   setRanking(spotIds: string[]): Promise<Result<void>>;
+  /** Delete a spot the current user created — only allowed if no one else has engaged. */
+  deleteSpot(spotId: string): Promise<Result<void>>;
 }
