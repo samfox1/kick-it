@@ -15,6 +15,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { usingSupabase } from '@/data/repositories';
 import { ensureSession } from '@/data/supabase/session';
 import { useProfileStore } from '@/store/profileStore';
+import { AccountGateModal } from '@/ui/AccountGateModal';
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -54,6 +55,7 @@ export default function RootLayout() {
           <Stack.Screen name="rank" />
           <Stack.Screen name="spot/[id]" />
         </Stack>
+        <AccountGateModal />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
