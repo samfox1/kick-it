@@ -99,6 +99,17 @@ catch mock/prod drift. (4) `AttendeeSnapshot` type for the jsonb (vs reusing `Me
 - Verified live: NOT_OWNER + SPOT_NOT_FOUND block; spot survives.
 - Future: genuinely bad/spam spots = moderation (admin), separate from this user-facing delete.
 
+## Image uploads — Supabase Storage (done 2026-06-22)
+- Public `media` bucket (0008) with per-user folders; public read, real-user-only upload into
+  your own folder, owner-only update/delete (verified: guest upload blocked, public URL + bucket OK).
+- `storage.ts`: `uploadImage`/`uploadImages` read local file URIs via `fetch(uri).arrayBuffer()`
+  and upload, returning public URLs; remote URLs + empties pass through. `isLocalUri` tested.
+- Wired into Supabase `createSpot` (cover + gallery) and `logHang` (photo): local device paths
+  are uploaded and replaced with public URLs before insert, so images persist + load everywhere.
+- Mock mode keeps local URIs (ephemeral, fine).
+- TODO: image compression/resize before upload; delete old Storage files when a spot/hang is
+  deleted or its photo changes (currently orphaned in the bucket).
+
 ## Crew — deferred by design
 - Crew is inherently multi-user; with a single real account a faithful cutover is an empty
   crew (accept/deny/invite have no one to act on). Kept as local display data until there is

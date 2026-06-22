@@ -8,6 +8,7 @@ import type { NewSpot, Spot } from '@/domain/models';
 import { failFrom } from './errors';
 import { rowToSpot, type SpotRow } from './mappers';
 import { currentUserId } from './session';
+import { uploadImage, uploadImages } from './storage';
 
 const COLUMNS =
   'id, creator_id, name, category, access, location, lat, lng, image, images, characteristic_ids, description';
@@ -51,6 +52,12 @@ export class SupabaseSpotRepository implements SpotRepository {
     const creatorId = await currentUserId(this.db);
     if (!creatorId) return fail('unauthorized', 'Not signed in');
 
+    // Upload any local photos to Storage first, so we persist public URLs, not device paths.
+    const cover = await uploadImage(this.db, creatorId, input.image);
+    if (!cover.ok) return cover;
+    const gallery = await uploadImages(this.db, creatorId, input.images ?? []);
+    if (!gallery.ok) return gallery;
+
     const { data, error } = await this.db
       .from('spots')
       .insert({
@@ -61,8 +68,8 @@ export class SupabaseSpotRepository implements SpotRepository {
         location: input.location,
         lat: input.lat ?? null,
         lng: input.lng ?? null,
-        image: input.image,
-        images: input.images ?? [],
+        image: cover.value,
+        images: gallery.value,
         characteristic_ids: input.characteristicIds,
         description: input.description ?? null,
       })

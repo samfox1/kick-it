@@ -7,6 +7,7 @@ import type { Hang, NewHang, ReactionKey } from '@/domain/models';
 import { failFrom } from './errors';
 import { rowToHang, type HangRow } from './mappers';
 import { currentUserId } from './session';
+import { uploadImage } from './storage';
 
 const COLUMNS =
   'id, spot_id, title, note, image, extra_attendees, attendees, created_at, author:profiles!author_id ( id, name, initial )';
@@ -44,6 +45,10 @@ export class SupabaseHangRepository implements HangRepository {
     const userId = await currentUserId(this.db);
     if (!userId) return fail('unauthorized', 'Not signed in');
 
+    // Upload a local photo to Storage first; persist the public URL, not the device path.
+    const photo = await uploadImage(this.db, userId, input.image);
+    if (!photo.ok) return photo;
+
     const { data, error } = await this.db
       .from('hangs')
       .insert({
@@ -51,7 +56,7 @@ export class SupabaseHangRepository implements HangRepository {
         author_id: userId,
         title: input.title,
         note: input.note,
-        image: input.image,
+        image: photo.value,
         attendees: input.attendees,
         extra_attendees: 0,
       })
