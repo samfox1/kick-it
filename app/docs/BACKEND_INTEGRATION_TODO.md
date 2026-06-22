@@ -107,8 +107,11 @@ catch mock/prod drift. (4) `AttendeeSnapshot` type for the jsonb (vs reusing `Me
 - Wired into Supabase `createSpot` (cover + gallery) and `logHang` (photo): local device paths
   are uploaded and replaced with public URLs before insert, so images persist + load everywhere.
 - Mock mode keeps local URIs (ephemeral, fine).
-- TODO: image compression/resize before upload; delete old Storage files when a spot/hang is
-  deleted or its photo changes (currently orphaned in the bucket).
+- DONE: **compression** — `lib/image.ts compressImage` caps width at 1280px + re-encodes JPEG
+  ~0.7 (via expo-image-manipulator) when picking photos in add.tsx; falls back to original on error.
+- DONE: **orphan cleanup** — `storage.removeImages`/`storagePathFromUrl` delete a content's Storage
+  files when a hang (deleteHang) or spot (deleteSpot, after the RPC) is removed; best-effort,
+  only touches our media-bucket URLs (seed/remote URLs ignored).
 
 ## Crew — deferred by design
 - Crew is inherently multi-user; with a single real account a faithful cutover is an empty

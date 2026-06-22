@@ -7,7 +7,7 @@ import type { Hang, NewHang, ReactionKey } from '@/domain/models';
 import { failFrom } from './errors';
 import { rowToHang, type HangRow } from './mappers';
 import { currentUserId } from './session';
-import { uploadImage } from './storage';
+import { removeImages, uploadImage } from './storage';
 
 const COLUMNS =
   'id, spot_id, title, note, image, extra_attendees, attendees, created_at, author:profiles!author_id ( id, name, initial )';
@@ -67,8 +67,12 @@ export class SupabaseHangRepository implements HangRepository {
   }
 
   async deleteHang(id: string): Promise<Result<void>> {
+    // Grab the photo first so we can clean it from Storage after the row is gone.
+    const { data: row } = await this.db.from('hangs').select('image').eq('id', id).maybeSingle();
     const { error } = await this.db.from('hangs').delete().eq('id', id);
-    return error ? failFrom(error) : ok(undefined);
+    if (error) return failFrom(error);
+    if (row?.image) await removeImages(this.db, [row.image]);
+    return ok(undefined);
   }
 
   async updateHang(id: string, patch: { title?: string; note?: string }): Promise<Result<void>> {

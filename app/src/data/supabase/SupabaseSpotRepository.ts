@@ -8,7 +8,7 @@ import type { NewSpot, Spot } from '@/domain/models';
 import { failFrom } from './errors';
 import { rowToSpot, type SpotRow } from './mappers';
 import { currentUserId } from './session';
-import { uploadImage, uploadImages } from './storage';
+import { removeImages, uploadImage, uploadImages } from './storage';
 
 const COLUMNS =
   'id, creator_id, name, category, access, location, lat, lng, image, images, characteristic_ids, description';
@@ -114,12 +114,24 @@ export class SupabaseSpotRepository implements SpotRepository {
   }
 
   async deleteSpot(spotId: string): Promise<Result<void>> {
+    // Read the photos before deleting so we can clean them from Storage afterward.
+    const { data: row } = await this.db
+      .from('spots')
+      .select('image, images')
+      .eq('id', spotId)
+      .maybeSingle();
+
     // Guarded server-side: creator-only, and only if no one else has engaged.
     const { error } = await this.db.rpc('delete_own_spot', { p_spot_id: spotId });
-    if (!error) return ok(undefined);
-    if (error.message?.includes('SPOT_HAS_ENGAGEMENT')) {
-      return fail('unauthorized', "Can't delete — others have saved, ranked, or hung out here.");
+    if (error) {
+      if (error.message?.includes('SPOT_HAS_ENGAGEMENT')) {
+        return fail('unauthorized', "Can't delete — others have saved, ranked, or hung out here.");
+      }
+      return failFrom(error);
     }
-    return failFrom(error);
+
+    const r = row as { image?: string; images?: string[] } | null;
+    if (r) await removeImages(this.db, [r.image ?? '', ...(r.images ?? [])]);
+    return ok(undefined);
   }
 }

@@ -49,6 +49,27 @@ export async function uploadImage(
   return ok(db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
 }
 
+const PUBLIC_PREFIX = `/storage/v1/object/public/${BUCKET}/`;
+
+/** Extract the in-bucket path from one of our public media URLs, or null if it isn't ours
+ *  (e.g. a seed picsum URL or empty). Used to clean up files when content is deleted. */
+export function storagePathFromUrl(url: string): string | null {
+  if (!url) return null;
+  const i = url.indexOf(PUBLIC_PREFIX);
+  return i === -1 ? null : url.slice(i + PUBLIC_PREFIX.length);
+}
+
+/** Best-effort delete of our uploaded images (ignores remote/seed URLs). Never throws. */
+export async function removeImages(db: SupabaseClient, urls: string[]): Promise<void> {
+  const paths = urls.map(storagePathFromUrl).filter((p): p is string => p !== null);
+  if (paths.length === 0) return;
+  try {
+    await db.storage.from(BUCKET).remove(paths);
+  } catch {
+    // Cleanup is best-effort; a failure must not block the delete it follows.
+  }
+}
+
 /** Upload many images (remote URLs pass through), preserving order. Fails fast on first error. */
 export async function uploadImages(
   db: SupabaseClient,

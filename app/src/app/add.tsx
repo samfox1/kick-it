@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { findDuplicateCandidates } from '@/domain/dedupe';
 import { exploreCatalog } from '@/domain/exploreView';
+import { compressImage } from '@/lib/image';
 import { useProfileStore } from '@/store/profileStore';
 import type { AccessLevel } from '@/domain/models';
 import { insertIndex, nextComparisonIndex } from '@/domain/rankInsert';
@@ -167,7 +168,10 @@ export default function AddScreen() {
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) return;
     const res = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.7 });
-    if (!res.canceled) setPhotos((p) => [...p, res.assets[0].uri]);
+    if (res.canceled) return;
+    const a = res.assets[0];
+    const uri = await compressImage(a.uri, a.width);
+    setPhotos((p) => [...p, uri]);
   };
   const addFromLibrary = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -175,7 +179,9 @@ export default function AddScreen() {
       quality: 0.7,
       allowsMultipleSelection: true,
     });
-    if (!res.canceled) setPhotos((p) => [...p, ...res.assets.map((a) => a.uri)]);
+    if (res.canceled) return;
+    const uris = await Promise.all(res.assets.map((a) => compressImage(a.uri, a.width)));
+    setPhotos((p) => [...p, ...uris]);
   };
   const removePhoto = (uri: string) => setPhotos((p) => p.filter((x) => x !== uri));
 

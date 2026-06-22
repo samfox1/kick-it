@@ -6,6 +6,17 @@
 // code imports it transitively; this uses the manual mock in src/data/supabase/__mocks__.
 jest.mock('@/data/supabase/client');
 
+// expo-image-manipulator is a native module; stub the chained API used by lib/image.
+jest.mock('expo-image-manipulator', () => ({
+  SaveFormat: { JPEG: 'jpeg' },
+  ImageManipulator: {
+    manipulate: () => ({
+      resize: jest.fn(),
+      renderAsync: async () => ({ saveAsync: async () => ({ uri: 'compressed://photo.jpg' }) }),
+    }),
+  },
+}));
+
 // Haptics are fire-and-forget side effects; no-op them in tests.
 jest.mock('expo-haptics', () => ({
   impactAsync: jest.fn(),
