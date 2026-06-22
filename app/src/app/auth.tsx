@@ -1,6 +1,7 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Mail, X } from 'lucide-react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,10 +9,19 @@ import { sendEmailOtp, verifyEmailOtp } from '@/data/supabase/auth';
 import { completeSignIn } from '@/lib/authFlow';
 import { colors, font, hardShadow, inkBorder, radii } from '@/theme/tokens';
 
+const LAST_EMAIL_KEY = 'kickit.lastEmail';
+
 export default function AuthScreen() {
   const router = useRouter();
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');
+
+  // Prefill the last email used, so re-login is one tap + code.
+  useEffect(() => {
+    AsyncStorage.getItem(LAST_EMAIL_KEY).then((v) => {
+      if (v) setEmail((cur) => cur || v);
+    });
+  }, []);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +36,7 @@ export default function AuthScreen() {
       const res = await sendEmailOtp(trimmed);
       if (res.ok) {
         setEmail(trimmed);
+        void AsyncStorage.setItem(LAST_EMAIL_KEY, trimmed);
         setStep('code');
       } else {
         setError(res.error.message);

@@ -6,6 +6,21 @@
 // code imports it transitively; this uses the manual mock in src/data/supabase/__mocks__.
 jest.mock('@/data/supabase/client');
 
+// expo-location native module — deterministic + inert in tests (no real GPS).
+jest.mock('expo-location', () => ({
+  PermissionStatus: { GRANTED: 'granted', DENIED: 'denied', UNDETERMINED: 'undetermined' },
+  getForegroundPermissionsAsync: jest.fn().mockResolvedValue({ status: 'denied' }),
+  requestForegroundPermissionsAsync: jest.fn().mockResolvedValue({ status: 'denied' }),
+  getCurrentPositionAsync: jest
+    .fn()
+    .mockResolvedValue({ coords: { latitude: 43.07, longitude: -89.4 } }),
+}));
+
+// AsyncStorage native module — use the library's official jest mock.
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);
+
 // expo-image-manipulator is a native module; stub the chained API used by lib/image.
 jest.mock('expo-image-manipulator', () => ({
   SaveFormat: { JPEG: 'jpeg' },

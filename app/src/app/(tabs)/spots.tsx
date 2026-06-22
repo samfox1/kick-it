@@ -6,6 +6,9 @@ import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatli
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { Spot } from '@/domain/models';
+import { usingSupabase } from '@/data/repositories';
+import { withDistances } from '@/domain/distance';
+import { useLocationPermission } from '@/lib/useLocation';
 import { visibleLocalSpots, visibleMySpots } from '@/domain/spotsView';
 import { haptics } from '@/lib/haptics';
 import { useHideOnScroll } from '@/lib/useHideOnScroll';
@@ -34,6 +37,7 @@ export default function SpotsScreen() {
     reorderMine,
   } = useSpotsStore();
   const router = useRouter();
+  const { coords } = useLocationPermission();
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [view, setView] = useState<'list' | 'map'>('list');
@@ -56,8 +60,12 @@ export default function SpotsScreen() {
 
   // Discovery (Local) hides spots already saved or ranked, so every one is savable.
   const ownedIds = [...mine, ...saved].map((s) => s.id);
+  // Supabase spots arrive with distanceMi=0; compute from the user's location (mock keeps seed).
+  const localWithDist = usingSupabase && coords ? withDistances(local, coords) : local;
   const spots =
-    collection === 'local' ? visibleLocalSpots(local, preferences, ownedIds) : visibleMySpots(mine);
+    collection === 'local'
+      ? visibleLocalSpots(localWithDist, preferences, ownedIds)
+      : visibleMySpots(mine);
   const count =
     collection === 'local' ? `${spots.length} spots near you` : `${spots.length} spots in your map`;
   const prefLabel =

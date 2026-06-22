@@ -16,3 +16,10 @@ export function haversineMeters(a: Coord, b: Coord): number {
     Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(h)));
 }
+
+const METERS_PER_MILE = 1609.344;
+
+/** Great-circle distance between two coordinates, in miles. */
+export function milesBetween(a: Coord, b: Coord): number {
+  return haversineMeters(a, b) / METERS_PER_MILE;
+}

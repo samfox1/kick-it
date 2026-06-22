@@ -15,6 +15,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CHARACTERISTICS } from '@/domain/characteristics';
+import { usingSupabase } from '@/data/repositories';
+import { withDistances } from '@/domain/distance';
 import { crewSpots, exploreCatalog, nearbySpots } from '@/domain/exploreView';
 import type { Spot } from '@/domain/models';
 import { topEndorsed } from '@/domain/vouch';
@@ -81,7 +83,7 @@ export default function ExploreScreen() {
   const requireAccount = useRequireAccount();
   const { local, mine, saved, loaded, load, preferences, setMaxDistance, toggleNonNegotiable } =
     useSpotsStore();
-  const { state: locationState, request } = useLocationPermission();
+  const { state: locationState, request, coords } = useLocationPermission();
   const [tab, setTab] = useState<Tab>('public');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [index, setIndex] = useState(0);
@@ -106,7 +108,10 @@ export default function ExploreScreen() {
   const nonNeg = preferences.nonNegotiables;
   // Discovery shows only spots you haven't collected yet, so swipe-to-save always saves.
   const ownedIds = new Set([...mine, ...saved].map((s) => s.id));
-  const catalog = exploreCatalog(local, mine).filter((s) => !ownedIds.has(s.id));
+  let catalog = exploreCatalog(local, mine).filter((s) => !ownedIds.has(s.id));
+  // Supabase spots arrive with distanceMi=0; compute it from the user's location so the
+  // distance filter works. Mock mode keeps its curated seed distances.
+  if (usingSupabase && coords) catalog = withDistances(catalog, coords);
   const list = tab === 'public' ? nearbySpots(catalog, maxMi, nonNeg) : crewSpots(catalog, nonNeg);
 
   // Start the deck over whenever the tab or filters change the set of spots.
