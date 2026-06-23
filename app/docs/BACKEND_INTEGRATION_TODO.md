@@ -113,6 +113,14 @@ catch mock/prod drift. (4) `AttendeeSnapshot` type for the jsonb (vs reusing `Me
   files when a hang (deleteHang) or spot (deleteSpot, after the RPC) is removed; best-effort,
   only touches our media-bucket URLs (seed/remote URLs ignored).
 
+## Map — real map view (done 2026-06-23)
+- `react-native-maps` (bundled in Expo Go): `SpotsMap.tsx` renders a real MapView with a marker
+  per located spot + the brand callout card; tap marker → callout → open. `SpotsMap.web.tsx`
+  keeps the stylized grid (react-native-maps has no web support; Metro picks per platform).
+- iOS Expo Go uses Apple Maps with **no config/key**. TODO before Android/standalone builds:
+  add a Google Maps API key (android.config.googleMaps.apiKey) + the react-native-maps config
+  plugin + location usage strings; markers could become branded custom views later.
+
 ## Crew — deferred by design
 - Crew is inherently multi-user; with a single real account a faithful cutover is an empty
   crew (accept/deny/invite have no one to act on). Kept as local display data until there is

@@ -6,6 +6,15 @@
 // code imports it transitively; this uses the manual mock in src/data/supabase/__mocks__.
 jest.mock('@/data/supabase/client');
 
+// react-native-maps is a native module; render plain Views in tests.
+jest.mock('react-native-maps', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  const Stub = (props: Record<string, unknown>) =>
+    React.createElement(View, props, props.children as React.ReactNode);
+  return { __esModule: true, default: Stub, Marker: Stub, PROVIDER_DEFAULT: 'default' };
+});
+
 // expo-location native module — deterministic + inert in tests (no real GPS).
 jest.mock('expo-location', () => ({
   PermissionStatus: { GRANTED: 'granted', DENIED: 'denied', UNDETERMINED: 'undetermined' },
