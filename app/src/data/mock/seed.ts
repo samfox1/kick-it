@@ -2,10 +2,9 @@ import type { Spot } from '../../domain/models';
 import { MockSpotRepository, type SpotSeed } from '../MockSpotRepository';
 import type { SpotRepository } from '../SpotRepository';
 
-/** Thematic mock photo: loremflickr returns an image matching the keywords; `lock` keeps it
- *  stable across loads so each spot always shows the same fitting picture. */
-const photo = (keywords: string, lock: number) =>
-  `https://loremflickr.com/600/400/${keywords}?lock=${lock}`;
+/** Mock photo from Lorem Picsum (real Unsplash-licensed images — free for public/commercial
+ *  use). `id` picks a stable photo; `keywords` is just a label for what we're aiming at. */
+const photo = (keywords: string, id: number) => `https://picsum.photos/id/${id}/600/400`;
 
 /** Spots the current user has saved/ranked (their crew's map). */
 const mine: Spot[] = [

@@ -3,9 +3,10 @@ import { MockHangRepository } from '../MockHangRepository';
 import type { HangRepository } from '../HangRepository';
 import { CREW, CREW_REQUESTS, CURRENT_MEMBER } from './profile';
 
-const photo = (keywords: string, lock: number) =>
-  `https://loremflickr.com/600/400/${keywords}?lock=${lock}`;
-const face = (n: number) => `https://i.pravatar.cc/240?img=${n}`;
+const photo = (keywords: string, id: number) => `https://picsum.photos/id/${id}/600/400`;
+const face = (n: number) =>
+  `https://api.dicebear.com/9.x/notionists/png?seed=kickit-${n}` +
+  `&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
 
 // Reuse the avatar'd crew + requests so members look the same everywhere.
 const [marcus, sara, dev, nia, joey] = CREW;

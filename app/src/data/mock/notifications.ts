@@ -20,7 +20,9 @@ export interface AppNotification {
   unread: boolean;
 }
 
-const face = (n: number) => `https://i.pravatar.cc/240?img=${n}`;
+const face = (n: number) =>
+  `https://api.dicebear.com/9.x/notionists/png?seed=kickit-${n}` +
+  `&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
 
 export const NOTIFICATIONS: AppNotification[] = [
   {

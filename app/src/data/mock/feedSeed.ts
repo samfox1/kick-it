@@ -3,8 +3,7 @@ import { MockFeedRepository } from '../MockFeedRepository';
 import type { FeedRepository } from '../FeedRepository';
 import { CREW } from './profile';
 
-const photo = (keywords: string, lock: number) =>
-  `https://loremflickr.com/600/400/${keywords}?lock=${lock}`;
+const photo = (keywords: string, id: number) => `https://picsum.photos/id/${id}/600/400`;
 
 // Reuse the avatar'd crew so members look the same across feed / hangs / crew.
 const [marcus, sara, dev] = CREW;
