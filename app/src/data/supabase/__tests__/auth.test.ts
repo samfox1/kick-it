@@ -47,7 +47,19 @@ describe('verifyEmailOtp', () => {
       type: 'email',
     });
     expect(res.ok && res.value.email).toBe('sam@x.com');
-    expect(res.ok && res.value.member).toMatchObject({ id: 'u1', name: 'sam', initial: 'S' });
+    expect(res.ok && res.value.member.id).toBe('u1');
+    // Profile has no handle yet → must choose a username.
+    expect(res.ok && res.value.needsUsername).toBe(true);
+  });
+
+  it('does not need a username when the account already has a handle', async () => {
+    sb.auth.verifyOtp.mockResolvedValue({ data: { user: { id: 'u2' } }, error: null });
+    maybeSingle.mockResolvedValue({
+      data: { name: 'cool', initial: 'C', handle: '@cool' },
+      error: null,
+    });
+    const res = await verifyEmailOtp('cool@x.com', '123456');
+    expect(res.ok && res.value.needsUsername).toBe(false);
   });
 
   it('fails on an invalid code', async () => {

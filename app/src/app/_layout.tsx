@@ -62,6 +62,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="add" />
           <Stack.Screen name="auth" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="choose-username" options={{ gestureEnabled: false }} />
           <Stack.Screen name="rank" />
           <Stack.Screen name="spot/[id]" />
         </Stack>

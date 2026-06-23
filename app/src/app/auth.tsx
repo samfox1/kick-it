@@ -61,7 +61,9 @@ export default function AuthScreen() {
         return;
       }
       await completeSignIn(res.value.member, res.value.email);
-      router.back(); // success → modal unmounts; no need to reset busy
+      // New accounts pick a username before entering; returning users just continue.
+      if (res.value.needsUsername) router.replace('/choose-username');
+      else router.back(); // success → modal unmounts; no need to reset busy
     } catch {
       setError('Something went wrong. Please try again.');
       setBusy(false);
