@@ -1,11 +1,9 @@
 import { useRouter } from 'expo-router';
 import {
-  Bell,
   ChevronLeft,
   ChevronRight,
   CircleHelp,
   LogIn,
-  Lock,
   LogOut,
   Mail,
   MapPin,
@@ -15,12 +13,13 @@ import {
   Users,
 } from 'lucide-react-native';
 import { type ReactNode, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { usingSupabase } from '@/data/repositories';
 import { signOutToGuest } from '@/lib/authFlow';
 import { shareInvite } from '@/lib/invite';
+import { useLocationPermission } from '@/lib/useLocation';
 import { useProfileStore } from '@/store/profileStore';
 import { colors, font, hardShadow, inkBorder, radii } from '@/theme/tokens';
 
@@ -49,11 +48,9 @@ function Row({
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const [notifications, setNotifications] = useState(true);
-  const [location, setLocation] = useState(true);
-  const [privateProfile, setPrivateProfile] = useState(false);
   const email = useProfileStore((s) => s.email);
   const [signingOut, setSigningOut] = useState(false);
+  const { state: locationState, request: requestLocation } = useLocationPermission();
 
   const onSignOut = async () => {
     if (!usingSupabase) return router.replace('/');
@@ -63,14 +60,17 @@ export default function SettingsScreen() {
     router.back();
   };
 
-  const toggle = (v: boolean, set: (b: boolean) => void) => (
-    <Switch
-      value={v}
-      onValueChange={set}
-      trackColor={{ true: colors.blue, false: '#d4d4d4' }}
-      thumbColor="#fff"
-    />
-  );
+  // Location is an OS permission: prompt if undecided, otherwise deep-link to OS settings
+  // (you can't toggle a granted/denied permission off from inside the app).
+  const onLocationPress = async () => {
+    if (locationState === 'granted' || locationState === 'denied') {
+      void Linking.openSettings();
+      return;
+    }
+    await requestLocation();
+  };
+  const locationLabel =
+    locationState === 'granted' ? 'On' : locationState === 'denied' ? 'Off' : '…';
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
@@ -117,21 +117,15 @@ export default function SettingsScreen() {
         <Text style={styles.group}>Preferences</Text>
         <View style={styles.card}>
           <Row
-            icon={<Bell size={18} color={colors.ink} strokeWidth={2} />}
-            label="Push notifications"
-            right={toggle(notifications, setNotifications)}
-          />
-          <View style={styles.divider} />
-          <Row
             icon={<MapPin size={18} color={colors.ink} strokeWidth={2} />}
             label="Share my location"
-            right={toggle(location, setLocation)}
-          />
-          <View style={styles.divider} />
-          <Row
-            icon={<Lock size={18} color={colors.ink} strokeWidth={2} />}
-            label="Private profile"
-            right={toggle(privateProfile, setPrivateProfile)}
+            onPress={onLocationPress}
+            right={
+              <View style={styles.rowRight}>
+                <Text style={styles.statusText}>{locationLabel}</Text>
+                <ChevronRight size={18} color={colors.muted2} strokeWidth={2} />
+              </View>
+            }
           />
         </View>
 
@@ -220,6 +214,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, height: 54 },
   rowIcon: { width: 22, alignItems: 'center' },
   rowLabel: { fontFamily: font.bold, fontSize: 14.5, color: colors.ink },
+  rowRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  statusText: { fontFamily: font.bold, fontSize: 14, color: colors.muted },
   divider: { height: 1.5, backgroundColor: colors.soft, marginLeft: 48 },
   signOut: {
     flexDirection: 'row',
