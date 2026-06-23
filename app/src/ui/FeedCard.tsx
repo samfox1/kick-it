@@ -14,7 +14,7 @@ import { ScoreBubble } from '@/ui/ScoreBubble';
 function Poster({ by, line, when }: { by: Member; line: string; when: string }) {
   return (
     <View style={styles.poster}>
-      <Avatar label={by.initial} color={memberColor(by)} size={38} />
+      <Avatar label={by.initial} color={memberColor(by)} size={38} uri={by.avatar} />
       <View style={{ flex: 1 }}>
         <Text style={styles.posterLine}>{line}</Text>
         <Text style={styles.when}>{when}</Text>
@@ -97,7 +97,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
             <View style={styles.stack}>
               {item.attendees.map((m, i) => (
                 <View key={m.id} style={i === 0 ? undefined : styles.stacked}>
-                  <Avatar label={m.initial} color={memberColor(m)} size={26} />
+                  <Avatar label={m.initial} color={memberColor(m)} size={26} uri={m.avatar} />
                 </View>
               ))}
               {item.extraAttendees > 0 && (
@@ -122,7 +122,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
       onPress={openSpot}
     >
       <View style={styles.rankedTop}>
-        <Avatar label={by.initial} color={memberColor(by)} size={38} />
+        <Avatar label={by.initial} color={memberColor(by)} size={38} uri={by.avatar} />
         <View style={{ flex: 1 }}>
           <Text style={styles.posterLine}>{by.name} ranked a spot</Text>
           <Text style={styles.when}>{item.when}</Text>

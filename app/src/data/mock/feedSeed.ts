@@ -1,12 +1,13 @@
-import type { FeedItem, Member } from '../../domain/models';
+import type { FeedItem } from '../../domain/models';
 import { MockFeedRepository } from '../MockFeedRepository';
 import type { FeedRepository } from '../FeedRepository';
+import { CREW } from './profile';
 
-const img = (seed: string) => `https://picsum.photos/seed/${seed}/600/400`;
+const photo = (keywords: string, lock: number) =>
+  `https://loremflickr.com/600/400/${keywords}?lock=${lock}`;
 
-const marcus: Member = { id: 'marcus', name: 'Marcus', initial: 'M' };
-const sara: Member = { id: 'sara', name: 'Sara', initial: 'S' };
-const dev: Member = { id: 'dev', name: 'Dev', initial: 'D' };
+// Reuse the avatar'd crew so members look the same across feed / hangs / crew.
+const [marcus, sara, dev] = CREW;
 
 // New spots are discovered on Explore, not the feed — the feed is hangs + rankings.
 const FEED: FeedItem[] = [
@@ -18,7 +19,7 @@ const FEED: FeedItem[] = [
     spotId: 'pontoon',
     spotName: "Uncle Rick's Pontoon",
     access: 'invite',
-    image: img('pontoon7'),
+    image: photo('lake,pontoon,boat', 101),
     note: 'Nine of us out on the lake til golden hour. Rick grilled, Dev brought the speaker. Best one yet.',
     attendees: [sara, marcus, dev],
     extraAttendees: 6,
@@ -34,7 +35,7 @@ const FEED: FeedItem[] = [
     category: 'basement',
     access: 'friends',
     score: 9.2,
-    thumb: img('basement4'),
+    thumb: photo('basement,game,room', 110),
     rank: 1,
   },
 ];

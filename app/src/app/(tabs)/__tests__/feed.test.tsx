@@ -20,8 +20,8 @@ describe('Feed screen', () => {
         <FeedScreen />
       </SafeAreaProvider>,
     );
-    expect(await screen.findByText(/Sara logged a hang at/)).toBeOnTheScreen();
-    expect(screen.getByText('Dev ranked a spot')).toBeOnTheScreen();
+    expect(await screen.findByText(/Sara Quinn logged a hang at/)).toBeOnTheScreen();
+    expect(screen.getByText('Dev Patel ranked a spot')).toBeOnTheScreen();
     // New spots live on Explore, not the feed.
     expect(screen.queryByText('Marcus added a new spot')).not.toBeOnTheScreen();
   });

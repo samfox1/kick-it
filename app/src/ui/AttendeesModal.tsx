@@ -38,7 +38,12 @@ export function AttendeesModal({
           <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
             {rows.map(({ member, status }) => (
               <View key={member.id} style={styles.row}>
-                <Avatar label={member.initial} color={memberColor(member)} size={36} />
+                <Avatar
+                  label={member.initial}
+                  color={memberColor(member)}
+                  size={36}
+                  uri={member.avatar}
+                />
                 <Text style={styles.name} numberOfLines={1}>
                   {member.name}
                 </Text>

@@ -71,7 +71,12 @@ export default function ProfileScreen() {
         scrollEventThrottle={16}
       >
         <View style={styles.profileRow}>
-          <Avatar label={profile.member.initial} color={accentRamp[0]} size={56} />
+          <Avatar
+            label={profile.member.initial}
+            color={accentRamp[0]}
+            size={56}
+            uri={profile.member.avatar}
+          />
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{profile.member.name}</Text>
             <Text style={styles.handle}>{profile.handle}</Text>
@@ -96,7 +101,7 @@ export default function ProfileScreen() {
           <Pressable style={styles.stack} onPress={() => router.push('/crew')}>
             {members.slice(0, 5).map((m, i) => (
               <View key={m.id} style={i === 0 ? undefined : styles.stacked}>
-                <Avatar label={m.initial} color={memberColor(m)} size={38} />
+                <Avatar label={m.initial} color={memberColor(m)} size={38} uri={m.avatar} />
               </View>
             ))}
           </Pressable>

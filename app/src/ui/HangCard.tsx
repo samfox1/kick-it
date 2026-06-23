@@ -88,7 +88,7 @@ export function HangCard({
   return (
     <View style={styles.card}>
       <View style={styles.posterRow}>
-        <Avatar label={author.initial} color={memberColor(author)} size={40} />
+        <Avatar label={author.initial} color={memberColor(author)} size={40} uri={author.avatar} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={styles.poster} numberOfLines={1}>
             {author.name}
@@ -150,7 +150,7 @@ export function HangCard({
         >
           {hang.attendees.slice(0, MAX_FACES).map((m, i) => (
             <View key={m.id} style={i === 0 ? undefined : styles.stacked}>
-              <Avatar label={m.initial} color={memberColor(m)} size={34} />
+              <Avatar label={m.initial} color={memberColor(m)} size={34} uri={m.avatar} />
             </View>
           ))}
           {peopleCount - Math.min(hang.attendees.length, MAX_FACES) > 0 && (

@@ -48,7 +48,12 @@ export default function CrewScreen() {
             <Text style={styles.section}>Requests ({requests.length})</Text>
             {requests.map((m, i) => (
               <View key={m.id} style={styles.row}>
-                <Avatar label={m.initial} color={accentRamp[i % accentRamp.length]} size={40} />
+                <Avatar
+                  label={m.initial}
+                  color={accentRamp[i % accentRamp.length]}
+                  size={40}
+                  uri={m.avatar}
+                />
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={styles.name}>{m.name}</Text>
                   <Text style={styles.sub}>wants to join your crew</Text>
@@ -78,7 +83,12 @@ export default function CrewScreen() {
         <Text style={styles.section}>In your crew ({members.length})</Text>
         {members.map((m, i) => (
           <View key={m.id} style={styles.row}>
-            <Avatar label={m.initial} color={accentRamp[i % accentRamp.length]} size={40} />
+            <Avatar
+              label={m.initial}
+              color={accentRamp[i % accentRamp.length]}
+              size={40}
+              uri={m.avatar}
+            />
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={styles.name}>{m.name}</Text>
               <Text style={styles.sub}>in your crew</Text>

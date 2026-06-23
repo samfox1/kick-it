@@ -80,8 +80,10 @@ export interface Preferences {
 export interface Member {
   id: string;
   name: string;
-  /** Initial shown in the avatar. */
+  /** Initial shown in the avatar when there's no photo. */
   initial: string;
+  /** Optional profile photo URL; falls back to the colored initial when absent. */
+  avatar?: string;
 }
 
 interface FeedBase {

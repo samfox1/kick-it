@@ -82,6 +82,7 @@ export default function NotificationsScreen() {
                   label={n.actorInitial}
                   color={accentRamp[i % accentRamp.length]}
                   size={40}
+                  uri={n.actorAvatar}
                 />
                 <View style={[styles.kindDot, { backgroundColor: TINT[n.kind] }]}>
                   {createElement(ICON[n.kind], { size: 11, color: '#fff', strokeWidth: 2.6 })}

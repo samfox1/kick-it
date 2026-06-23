@@ -50,7 +50,7 @@ export default function EditProfileScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.avatarWrap}>
-            <Avatar label={member.initial} color={accentRamp[0]} size={84} />
+            <Avatar label={member.initial} color={accentRamp[0]} size={84} uri={member.avatar} />
             <Pressable style={styles.changePhoto}>
               <Text style={styles.changePhotoText}>Change photo</Text>
             </Pressable>
