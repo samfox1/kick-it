@@ -28,6 +28,7 @@ import { colors, font, hardShadow, inkBorder, pressedStyle, radii } from '@/them
 import { AccessSticker } from '@/ui/AccessSticker';
 import { CategoryBadge } from '@/ui/CategoryBadge';
 import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
 import { PreferencesPanel } from '@/ui/PreferencesPanel';
 import { ScoreBubble } from '@/ui/ScoreBubble';
 import bench from '../../../assets/images/bench.png';
@@ -81,8 +82,17 @@ function DeckCard({ spot, top, onOpen }: { spot: Spot; top: boolean; onOpen?: ()
 export default function ExploreScreen() {
   const router = useRouter();
   const requireAccount = useRequireAccount();
-  const { local, mine, saved, loaded, load, preferences, setMaxDistance, toggleNonNegotiable } =
-    useSpotsStore();
+  const {
+    local,
+    mine,
+    saved,
+    loaded,
+    error,
+    load,
+    preferences,
+    setMaxDistance,
+    toggleNonNegotiable,
+  } = useSpotsStore();
   const { state: locationState, request, coords } = useLocationPermission();
   const [tab, setTab] = useState<Tab>('public');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -257,7 +267,9 @@ export default function ExploreScreen() {
 
         {locationState === 'granted' && (
           <View style={styles.deck}>
-            {visible.length === 0 ? (
+            {error ? (
+              <ErrorState message={error} onRetry={() => void load()} />
+            ) : visible.length === 0 ? (
               <EmptyState
                 source={bench}
                 title={

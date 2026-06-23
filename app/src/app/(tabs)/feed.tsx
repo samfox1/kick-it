@@ -9,8 +9,11 @@ import { useHideOnScroll } from '@/lib/useHideOnScroll';
 import { useFeedStore } from '@/store/feedStore';
 import { colors, hardShadow, inkBorder, pressedStyle, radii } from '@/theme/tokens';
 import { AppearingView } from '@/ui/AppearingView';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
 import { FeedCard } from '@/ui/FeedCard';
 import { Skeleton } from '@/ui/Skeleton';
+import couch from '../../../assets/images/couch_image.png';
 import wordmark from '../../../assets/images/wordmark.png';
 
 function FeedSkeleton() {
@@ -38,7 +41,7 @@ function FeedSkeleton() {
 
 export default function FeedScreen() {
   const router = useRouter();
-  const { items, loaded, load } = useFeedStore();
+  const { items, loaded, error, load } = useFeedStore();
   const [elevated, setElevated] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const onScroll = useHideOnScroll(setElevated);
@@ -84,6 +87,14 @@ export default function FeedScreen() {
       >
         {!loaded ? (
           <FeedSkeleton />
+        ) : error ? (
+          <ErrorState message={error} onRetry={() => void load()} />
+        ) : items.length === 0 ? (
+          <EmptyState
+            source={couch}
+            title="Your feed is quiet"
+            subtitle="Rank a spot or log a hang — your crew's activity shows up here."
+          />
         ) : (
           items.map((item, i) => (
             <AppearingView key={item.id} index={i}>

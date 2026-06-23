@@ -23,6 +23,7 @@ import {
 import { Avatar, memberColor } from '@/ui/Avatar';
 import { ConfirmModal } from '@/ui/ConfirmModal';
 import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
 import { HangCard } from '@/ui/HangCard';
 import { Segmented } from '@/ui/Segmented';
 import { SpotRow } from '@/ui/SpotRow';
@@ -34,7 +35,7 @@ type Tab = 'saved' | 'hangs';
 export default function ProfileScreen() {
   const router = useRouter();
   const profile = useProfileStore();
-  const { saved, local, mine, loaded, load } = useSpotsStore();
+  const { saved, local, mine, loaded, error, load } = useSpotsStore();
   const members = useCrewStore((s) => s.members);
   const requests = useCrewStore((s) => s.requests);
   const myHangs = useHangsStore((s) => s.hangs).filter((h) => h.author.id === profile.member.id);
@@ -122,7 +123,9 @@ export default function ProfileScreen() {
         </View>
 
         {tab === 'saved' &&
-          (saved.length === 0 ? (
+          (error ? (
+            <ErrorState message={error} onRetry={() => void load()} />
+          ) : saved.length === 0 ? (
             <EmptyState
               source={beanbag}
               title="No saved spots yet"

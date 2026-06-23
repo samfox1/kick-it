@@ -17,6 +17,8 @@ import { colors, font, hardShadow, inkBorder, radii } from '@/theme/tokens';
 import { PreferencesPanel } from '@/ui/PreferencesPanel';
 import { Segmented } from '@/ui/Segmented';
 import { SpotRow } from '@/ui/SpotRow';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
 import { SpotsMap } from '@/ui/SpotsMap';
 import bench from '../../../assets/images/bench.png';
 
@@ -30,6 +32,7 @@ export default function SpotsScreen() {
     saved,
     preferences,
     loaded,
+    error,
     load,
     setCollection,
     setMaxDistance,
@@ -138,6 +141,20 @@ export default function SpotsScreen() {
     </>
   );
 
+  const emptyOrError = !loaded ? null : error ? (
+    <ErrorState message={error} onRetry={() => void load()} />
+  ) : (
+    <EmptyState
+      source={bench}
+      title={collection === 'mine' ? 'No ranked spots yet' : 'No spots near you'}
+      subtitle={
+        collection === 'mine'
+          ? 'Rank a spot from Explore to start your list.'
+          : 'Adjust your filters, or add a new spot.'
+      }
+    />
+  );
+
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
       {view === 'map' ? (
@@ -155,6 +172,7 @@ export default function SpotsScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={refreshControl}
           ListHeaderComponent={<View>{header}</View>}
+          ListEmptyComponent={emptyOrError}
           activationDistance={14}
           onDragEnd={({ data, from, to }) => {
             if (from === to) return;
@@ -181,9 +199,9 @@ export default function SpotsScreen() {
           refreshControl={refreshControl}
         >
           {header}
-          {spots.map((spot) => (
-            <SpotRow key={spot.id} spot={spot} />
-          ))}
+          {spots.length === 0
+            ? emptyOrError
+            : spots.map((spot) => <SpotRow key={spot.id} spot={spot} />)}
         </ScrollView>
       )}
     </SafeAreaView>
