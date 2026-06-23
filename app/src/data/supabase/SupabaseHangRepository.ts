@@ -62,7 +62,10 @@ export class SupabaseHangRepository implements HangRepository {
       })
       .select(COLUMNS)
       .single();
-    if (error) return failFrom(error);
+    if (error) {
+      await removeImages(this.db, [photo.value]); // don't orphan the uploaded photo
+      return failFrom(error);
+    }
     return ok(rowToHang(data as unknown as HangRow));
   }
 

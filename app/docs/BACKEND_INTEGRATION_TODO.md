@@ -99,6 +99,20 @@ catch mock/prod drift. (4) `AttendeeSnapshot` type for the jsonb (vs reusing `Me
 - Verified live: NOT_OWNER + SPOT_NOT_FOUND block; spot survives.
 - Future: genuinely bad/spam spots = moderation (admin), separate from this user-facing delete.
 
+## Review follow-ups (2026-06-23) — deferred, low-risk
+- **SQL↔TS error coupling:** `deleteSpot` detects engagement via `error.message.includes('SPOT_HAS_ENGAGEMENT')`.
+  Works (message is stable), but fragile to message changes/localization, and NOT_OWNER/NOT_FOUND
+  collapse to a generic error. Harden later by raising with a custom SQLSTATE/`detail` and matching
+  on `error.code`, or return a typed status from the RPC.
+- **creatorId nullability:** `creator_id` is NOT NULL in the DB but `Spot.creatorId` is optional;
+  could tighten to non-null (removes the defensive `spot.creatorId && isMe()` guard).
+- **Profile save divergence:** `updateProfile` is fire-and-forget (logs on failure); identity-critical,
+  so consider surfacing a retry like add-hang does.
+- **Per-screen GPS:** `useLocationPermission` fetches a fix per screen (explore/spots/settings);
+  lift into a store/context to fetch once if it spreads further.
+- **Mock deleteSpot divergence:** mock is unconditionally permissive (no engagement guard); the
+  delete failure branch is only exercised against Supabase. Fine for single-user; add a test if needed.
+
 ## Image uploads — Supabase Storage (done 2026-06-22)
 - Public `media` bucket (0008) with per-user folders; public read, real-user-only upload into
   your own folder, owner-only update/delete (verified: guest upload blocked, public URL + bucket OK).

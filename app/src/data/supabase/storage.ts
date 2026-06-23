@@ -39,6 +39,9 @@ export async function uploadImage(
   } catch {
     return fail('unknown', 'Could not read the selected image.');
   }
+  // RN's fetch(file://) can resolve to an empty body on some platforms; never persist a
+  // 0-byte image (it would save a broken photo with no error).
+  if (body.byteLength === 0) return fail('unknown', 'The selected image was empty.');
 
   const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${extFor(uri)}`;
   const { error } = await db.storage

@@ -56,7 +56,10 @@ export class SupabaseSpotRepository implements SpotRepository {
     const cover = await uploadImage(this.db, creatorId, input.image);
     if (!cover.ok) return cover;
     const gallery = await uploadImages(this.db, creatorId, input.images ?? []);
-    if (!gallery.ok) return gallery;
+    if (!gallery.ok) {
+      await removeImages(this.db, [cover.value]); // don't orphan the cover
+      return gallery;
+    }
 
     const { data, error } = await this.db
       .from('spots')
@@ -75,7 +78,10 @@ export class SupabaseSpotRepository implements SpotRepository {
       })
       .select(COLUMNS)
       .single();
-    if (error) return failFrom(error);
+    if (error) {
+      await removeImages(this.db, [cover.value, ...gallery.value]); // clean up on insert failure
+      return failFrom(error);
+    }
     return ok(rowToSpot(data as SpotRow));
   }
 

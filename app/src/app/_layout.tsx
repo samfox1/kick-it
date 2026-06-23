@@ -41,8 +41,12 @@ export default function RootLayout() {
           return;
         }
         hydrate(res.value);
-        const saved = await loadHandle(res.value.id);
-        if (saved) setHandle(saved);
+        try {
+          const saved = await loadHandle(res.value.id);
+          if (saved) setHandle(saved);
+        } catch (e) {
+          console.warn('Loading handle failed:', e); // non-fatal; session already established
+        }
       })
       .catch((e) => console.warn('Session bootstrap threw:', e))
       .finally(() => setSessionReady(true));

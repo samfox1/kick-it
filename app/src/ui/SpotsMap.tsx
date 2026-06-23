@@ -1,13 +1,12 @@
-import { Image, type ImageSource } from 'expo-image';
-import { Navigation } from 'lucide-react-native';
+import { type ImageSource } from 'expo-image';
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import MapView, { Marker, type Region } from 'react-native-maps';
 
 import type { Spot } from '@/domain/models';
-import { colors, font, hardShadow, inkBorder, radii } from '@/theme/tokens';
+import { colors, inkBorder, radii } from '@/theme/tokens';
 import { EmptyState } from '@/ui/EmptyState';
-import { ScoreBubble } from '@/ui/ScoreBubble';
+import { SpotsCallout } from '@/ui/SpotsCallout';
 
 // Full grayscale for Google Maps (Android). Apple Maps can't be custom-styled, so iOS uses
 // the built-in `mutedStandard` map type instead (desaturated, fits the ink look).
@@ -79,23 +78,7 @@ export function SpotsMap({
         ))}
       </MapView>
 
-      {selected && (
-        <Pressable style={styles.callout} onPress={() => onOpen(selected)}>
-          <Image source={{ uri: selected.image }} style={styles.calloutImg} contentFit="cover" />
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={styles.calloutName} numberOfLines={1}>
-              {selected.name}
-            </Text>
-            <View style={styles.calloutMetaRow}>
-              <Navigation size={12} color={colors.blue} strokeWidth={2.4} />
-              <Text style={styles.calloutMeta} numberOfLines={1}>
-                {selected.distanceMi} mi · {selected.category}
-              </Text>
-            </View>
-          </View>
-          <ScoreBubble score={selected.score} size="md" />
-        </Pressable>
-      )}
+      {selected && <SpotsCallout spot={selected} onOpen={onOpen} />}
     </View>
   );
 }
@@ -109,23 +92,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.soft,
     ...inkBorder,
   },
-  callout: {
-    position: 'absolute',
-    left: 14,
-    right: 14,
-    bottom: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 12,
-    borderRadius: radii.lg,
-    backgroundColor: colors.paper,
-    ...inkBorder,
-    ...hardShadow(4),
-    elevation: 20,
-  },
-  calloutImg: { width: 48, height: 48, borderRadius: 24, ...inkBorder },
-  calloutName: { fontFamily: font.extrabold, fontSize: 16, color: colors.ink },
-  calloutMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3 },
-  calloutMeta: { flex: 1, fontFamily: font.semibold, fontSize: 12, color: colors.muted },
 });

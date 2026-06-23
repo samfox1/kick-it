@@ -20,7 +20,9 @@ export default function Landing() {
   // Show the landing once; later launches go straight to the feed.
   const [seen, setSeen] = useState<boolean | null>(null);
   useEffect(() => {
-    AsyncStorage.getItem(ONBOARDED_KEY).then((v) => setSeen(v === '1'));
+    AsyncStorage.getItem(ONBOARDED_KEY)
+      .then((v) => setSeen(v === '1'))
+      .catch(() => setSeen(false)); // storage read failed → show the landing rather than hang
   }, []);
 
   const enter = () => {
