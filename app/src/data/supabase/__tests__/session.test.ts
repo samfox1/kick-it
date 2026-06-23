@@ -30,7 +30,8 @@ describe('ensureSession', () => {
   it('signs in anonymously when there is no session, returning the member', async () => {
     const res = await ensureSession(defaults);
     expect(sb.auth.signInAnonymously).toHaveBeenCalledTimes(1);
-    expect(res).toEqual({ ok: true, value: { id: 'uuid-1', name: 'Sam Fox', initial: 'S' } });
+    expect(res.ok && res.value).toMatchObject({ id: 'uuid-1', name: 'Sam Fox', initial: 'S' });
+    expect(res.ok && typeof res.value.avatar).toBe('string'); // default seeded avatar
   });
 
   it('reuses an existing session without signing in again', async () => {
@@ -69,7 +70,7 @@ describe('ensureSession', () => {
   it('falls back to the defaults when no profile row is returned', async () => {
     maybeSingle.mockResolvedValue({ data: null, error: null });
     const res = await ensureSession(defaults);
-    expect(res).toEqual({ ok: true, value: { id: 'uuid-1', name: 'Sam Fox', initial: 'S' } });
+    expect(res.ok && res.value).toMatchObject({ id: 'uuid-1', name: 'Sam Fox', initial: 'S' });
   });
 
   it('dedupes concurrent calls into a single sign-in', async () => {

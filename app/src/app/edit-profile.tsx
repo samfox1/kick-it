@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProfileStore } from '@/store/profileStore';
 import { accentRamp, colors, font, hardShadow, inkBorder, radii } from '@/theme/tokens';
 import { Avatar } from '@/ui/Avatar';
+import { AvatarCustomizer } from '@/ui/AvatarCustomizer';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -24,6 +25,7 @@ export default function EditProfileScreen() {
   const updateProfile = useProfileStore((s) => s.updateProfile);
   const [name, setName] = useState(member.name);
   const [handle, setHandle] = useState(currentHandle);
+  const [customizing, setCustomizing] = useState(false);
 
   const save = () => {
     updateProfile({ name: name.trim() || member.name, handle: handle.trim() || currentHandle });
@@ -51,8 +53,8 @@ export default function EditProfileScreen() {
         >
           <View style={styles.avatarWrap}>
             <Avatar label={member.initial} color={accentRamp[0]} size={84} uri={member.avatar} />
-            <Pressable style={styles.changePhoto}>
-              <Text style={styles.changePhotoText}>Change photo</Text>
+            <Pressable style={styles.changePhoto} onPress={() => setCustomizing(true)}>
+              <Text style={styles.changePhotoText}>Customize avatar</Text>
             </Pressable>
           </View>
 
@@ -72,6 +74,16 @@ export default function EditProfileScreen() {
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <AvatarCustomizer
+        visible={customizing}
+        initialSeed={member.id}
+        onClose={() => setCustomizing(false)}
+        onSave={(url) => {
+          updateProfile({ avatar: url });
+          setCustomizing(false);
+        }}
+      />
     </SafeAreaView>
   );
 }

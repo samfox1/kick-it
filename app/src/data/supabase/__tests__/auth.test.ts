@@ -46,10 +46,8 @@ describe('verifyEmailOtp', () => {
       token: '123456',
       type: 'email',
     });
-    expect(res).toEqual({
-      ok: true,
-      value: { member: { id: 'u1', name: 'sam', initial: 'S' }, email: 'sam@x.com' },
-    });
+    expect(res.ok && res.value.email).toBe('sam@x.com');
+    expect(res.ok && res.value.member).toMatchObject({ id: 'u1', name: 'sam', initial: 'S' });
   });
 
   it('fails on an invalid code', async () => {

@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { fail, ok, type Result } from '@/data/result';
 import { supabase } from '@/data/supabase/client';
+import { defaultAvatarUrl } from '@/domain/avatar';
 import type { Member } from '@/domain/models';
 
 /** The current authenticated user's id, or null. The one place repos resolve identity,
@@ -25,14 +26,19 @@ export async function ensureProfile(
   const { error: upsertError } = await supabase
     .from('profiles')
     .upsert(
-      { id: userId, name: defaults.name, initial: defaults.initial },
+      {
+        id: userId,
+        name: defaults.name,
+        initial: defaults.initial,
+        avatar: defaultAvatarUrl(userId),
+      },
       { onConflict: 'id', ignoreDuplicates: true },
     );
   if (upsertError) return fail('network', upsertError.message);
 
   const { data: profile, error: readError } = await supabase
     .from('profiles')
-    .select('name, initial')
+    .select('name, initial, avatar')
     .eq('id', userId)
     .maybeSingle();
   if (readError) return fail('network', readError.message);
@@ -41,6 +47,7 @@ export async function ensureProfile(
     id: userId,
     name: profile?.name ?? defaults.name,
     initial: profile?.initial ?? defaults.initial,
+    avatar: profile?.avatar ?? defaultAvatarUrl(userId),
   });
 }
 

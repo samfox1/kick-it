@@ -2,7 +2,7 @@ import { ok, type Result } from '@/data/result';
 import { supabase } from '@/data/supabase/client';
 import { failFrom } from './errors';
 
-type ProfilePatch = { name?: string; initial?: string; handle?: string };
+type ProfilePatch = { name?: string; initial?: string; handle?: string; avatar?: string };
 
 /** Persist profile edits to the user's `profiles` row. */
 export async function saveProfile(userId: string, patch: ProfilePatch): Promise<Result<void>> {

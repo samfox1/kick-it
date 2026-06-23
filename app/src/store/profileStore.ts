@@ -15,7 +15,7 @@ interface ProfileState {
   handle: string;
   /** The signed-in account's email, or null when browsing as an anonymous guest. */
   email: string | null;
-  updateProfile: (patch: { name?: string; handle?: string }) => void;
+  updateProfile: (patch: { name?: string; handle?: string; avatar?: string }) => void;
   /** Replace the identity wholesale (e.g. hydrate from the authenticated session). */
   hydrate: (member: Member) => void;
   /** Set the signed-in email (null = guest). */
@@ -28,16 +28,17 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   member: CURRENT_MEMBER,
   handle: CURRENT_USER.handle,
   email: null,
-  updateProfile: ({ name, handle }) => {
+  updateProfile: ({ name, handle, avatar }) => {
     set((s) => {
       const trimmedName = name?.trim();
       const trimmedHandle = handle?.trim();
-      return {
-        member: trimmedName
-          ? { ...s.member, name: trimmedName, initial: trimmedName[0].toUpperCase() }
-          : s.member,
-        handle: trimmedHandle || s.handle,
-      };
+      const member = { ...s.member };
+      if (trimmedName) {
+        member.name = trimmedName;
+        member.initial = trimmedName[0].toUpperCase();
+      }
+      if (avatar) member.avatar = avatar;
+      return { member, handle: trimmedHandle || s.handle };
     });
     // Persist the edit to the backend (Supabase mode). Lazy-required so the mock/tests never
     // load the native client.
@@ -49,6 +50,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         name: member.name,
         initial: member.initial,
         handle: h,
+        avatar: typeof member.avatar === 'string' ? member.avatar : undefined,
       }).then((res: import('@/data/result').Result<unknown>) => reportFailure('saveProfile', res));
     }
   },
