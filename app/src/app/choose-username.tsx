@@ -18,21 +18,30 @@ import { colors, font, hardShadow, inkBorder, radii } from '@/theme/tokens';
  *  anonymous, which makes for bolder hang posts. */
 export default function ChooseUsernameScreen() {
   const router = useRouter();
-  const updateProfile = useProfileStore((s) => s.updateProfile);
+  const claimUsername = useProfileStore((s) => s.claimUsername);
   const [username, setUsername] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   // Letters, numbers, underscores; 3–20 chars.
   const clean = username.trim().replace(/^@+/, '');
   const valid = /^[a-zA-Z0-9_]{3,20}$/.test(clean);
 
-  const save = () => {
+  const save = async () => {
+    if (busy) return;
     if (!valid) {
       setError('3–20 letters, numbers, or underscores.');
       return;
     }
-    updateProfile({ name: clean, handle: `@${clean}` });
-    router.replace('/feed');
+    setBusy(true);
+    setError(null);
+    const res = await claimUsername(clean);
+    if (res.ok) {
+      router.replace('/feed');
+    } else {
+      setError(res.error.message); // e.g. "That username is taken — try another."
+      setBusy(false);
+    }
   };
 
   return (
@@ -68,8 +77,12 @@ export default function ChooseUsernameScreen() {
           </View>
           {error && <Text style={styles.error}>{error}</Text>}
 
-          <Pressable style={[styles.btn, !valid && styles.btnOff]} onPress={save} disabled={!valid}>
-            <Text style={styles.btnText}>Continue</Text>
+          <Pressable
+            style={[styles.btn, (!valid || busy) && styles.btnOff]}
+            onPress={save}
+            disabled={!valid || busy}
+          >
+            <Text style={styles.btnText}>{busy ? 'Checking…' : 'Continue'}</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>

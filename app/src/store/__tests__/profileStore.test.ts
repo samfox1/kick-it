@@ -51,6 +51,16 @@ describe('profileStore.hydrate', () => {
   });
 });
 
+describe('profileStore.claimUsername', () => {
+  it('sets the name + handle from the chosen username (mock mode)', async () => {
+    const res = await useProfileStore.getState().claimUsername('nightowl');
+    expect(res.ok).toBe(true);
+    expect(useProfileStore.getState().member.name).toBe('nightowl');
+    expect(useProfileStore.getState().member.initial).toBe('N');
+    expect(useProfileStore.getState().handle).toBe('@nightowl');
+  });
+});
+
 describe('isMe', () => {
   it('matches the current user id, nothing else', () => {
     expect(isMe('sam')).toBe(true);

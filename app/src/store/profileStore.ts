@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import { CURRENT_MEMBER, CURRENT_USER } from '@/data/mock/profile';
 import { usingSupabase } from '@/data/repositories';
+import { ok, type Result } from '@/data/result';
 import { reportFailure } from '@/store/optimistic';
 import type { Member } from '@/domain/models';
 
@@ -22,6 +23,8 @@ interface ProfileState {
   setEmail: (email: string | null) => void;
   /** Set the handle (e.g. hydrate the saved handle on launch). */
   setHandle: (handle: string) => void;
+  /** First-time username pick. Awaited + returns a Result so the UI can show "taken". */
+  claimUsername: (username: string) => Promise<Result<void>>;
 }
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
@@ -57,6 +60,22 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   hydrate: (member) => set({ member }),
   setEmail: (email) => set({ email }),
   setHandle: (handle) => set({ handle }),
+  claimUsername: async (username) => {
+    const name = username;
+    const handle = `@${username}`;
+    const applyLocal = () =>
+      set((s) => ({ member: { ...s.member, name, initial: name[0].toUpperCase() }, handle }));
+
+    if (!usingSupabase) {
+      applyLocal(); // mock has no real uniqueness
+      return ok(undefined);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { claimUsername } = require('@/data/supabase/profileSync');
+    const res: Result<void> = await claimUsername(get().member.id, name, handle);
+    if (res.ok) applyLocal(); // only adopt it locally once the backend accepts it
+    return res;
+  },
 }));
 
 /** Whether `id` is the current user — the single place that answers "is this me?". */

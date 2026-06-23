@@ -6,7 +6,7 @@
 
 /** Why a repository read/write failed, so the UI can react (retry, sign-in, …). */
 export interface RepoError {
-  code: 'network' | 'not_found' | 'unauthorized' | 'unknown';
+  code: 'network' | 'not_found' | 'unauthorized' | 'conflict' | 'unknown';
   message: string;
 }
 
