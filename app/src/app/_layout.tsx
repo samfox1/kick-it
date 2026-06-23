@@ -13,6 +13,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { usingSupabase } from '@/data/repositories';
+import { loadHandle } from '@/data/supabase/profileSync';
 import { ensureSession } from '@/data/supabase/session';
 import { useProfileStore } from '@/store/profileStore';
 import { AccountGateModal } from '@/ui/AccountGateModal';
@@ -32,11 +33,16 @@ export default function RootLayout() {
   const [sessionReady, setSessionReady] = useState(!usingSupabase);
   useEffect(() => {
     if (!usingSupabase) return;
-    const { member, hydrate } = useProfileStore.getState();
+    const { member, hydrate, setHandle } = useProfileStore.getState();
     ensureSession({ name: member.name, initial: member.initial })
-      .then((res) => {
-        if (res.ok) hydrate(res.value);
-        else console.warn('Session bootstrap failed:', res.error.message);
+      .then(async (res) => {
+        if (!res.ok) {
+          console.warn('Session bootstrap failed:', res.error.message);
+          return;
+        }
+        hydrate(res.value);
+        const saved = await loadHandle(res.value.id);
+        if (saved) setHandle(saved);
       })
       .catch((e) => console.warn('Session bootstrap threw:', e))
       .finally(() => setSessionReady(true));
