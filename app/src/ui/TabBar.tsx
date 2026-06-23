@@ -4,6 +4,7 @@ import { createElement, useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useRequireAccount } from '@/lib/useRequireAccount';
 import { useUiStore } from '@/store/uiStore';
 import { colors, hardShadow, inkBorder } from '@/theme/tokens';
 
@@ -12,6 +13,14 @@ const ICONS: Record<string, LucideIcon> = {
   explore: Compass,
   spots: MapPin,
   profile: User,
+};
+
+/** Friendly names for the icon-only tabs (screen readers + UI tests). */
+const TAB_LABELS: Record<string, string> = {
+  feed: 'Feed',
+  explore: 'Explore',
+  spots: 'Spots',
+  profile: 'Profile',
 };
 
 /** A nav icon that springs up + reveals a dot when it becomes the active tab. */
@@ -50,6 +59,7 @@ export interface TabBarProps {
 /** Floating white pill nav with a blue center "+" that opens the Add flow. */
 export function TabBar({ state, navigation }: TabBarProps) {
   const router = useRouter();
+  const requireAccount = useRequireAccount();
   const insets = useSafeAreaInsets();
   const hidden = useUiStore((s) => s.tabBarHidden);
   const setHidden = useUiStore((s) => s.setTabBarHidden);
@@ -78,6 +88,7 @@ export function TabBar({ state, navigation }: TabBarProps) {
       <Pressable
         key={name}
         accessibilityRole="button"
+        accessibilityLabel={TAB_LABELS[name] ?? name}
         accessibilityState={{ selected: focused }}
         onPress={() => navigation.navigate(route.name)}
         style={styles.tab}
@@ -95,7 +106,9 @@ export function TabBar({ state, navigation }: TabBarProps) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Add a spot"
-          onPress={() => router.push('/add')}
+          onPress={() => {
+            if (requireAccount('Sign in to add a spot.')) router.push('/add');
+          }}
           style={styles.plus}
         >
           <Plus size={24} color="#fff" strokeWidth={2.4} />

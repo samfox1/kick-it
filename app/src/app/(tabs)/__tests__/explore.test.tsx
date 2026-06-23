@@ -12,6 +12,9 @@ jest.mock('expo-location', () => ({
   PermissionStatus: { GRANTED: 'granted' },
   getForegroundPermissionsAsync: jest.fn().mockResolvedValue({ status: 'granted' }),
   requestForegroundPermissionsAsync: jest.fn().mockResolvedValue({ status: 'granted' }),
+  getCurrentPositionAsync: jest
+    .fn()
+    .mockResolvedValue({ coords: { latitude: 43.07, longitude: -89.4 } }),
 }));
 
 const metrics = {
@@ -28,19 +31,21 @@ function renderScreen() {
 }
 
 describe('Explore screen', () => {
-  it('has a big Public/Crew toggle and shows nearby public spots once location is granted', async () => {
+  it('has a big Public/Crew toggle and shows nearby public spots you have not collected', async () => {
     renderScreen();
     expect(screen.getByText('Public')).toBeOnTheScreen();
     expect(screen.getByText('Crew')).toBeOnTheScreen();
-    // Cedar Bench is open + 0.4 mi → within the default 5 mi limit.
-    expect(await screen.findByText('Cedar Bench by the Oak')).toBeOnTheScreen();
+    // Riverwalk Steps is open + 1.6 mi and not already in your list.
+    expect(await screen.findByText('Riverwalk Steps')).toBeOnTheScreen();
+    // Cedar Bench is open + nearby but already ranked → not shown in discovery.
+    expect(screen.queryByText('Cedar Bench by the Oak')).not.toBeOnTheScreen();
   });
 
-  it("switches to the crew's friends-only spots", async () => {
+  it("switches to the crew's invite/friends-only spots", async () => {
     renderScreen();
-    await screen.findByText('Cedar Bench by the Oak');
+    await screen.findByText('Riverwalk Steps');
     fireEvent.press(screen.getByText('Crew'));
-    // Joey's Basement is friends-only → only visible on the Crew tab.
-    expect(await screen.findByText("Joey's Basement")).toBeOnTheScreen();
+    // The Loading Dock is invite-only and not yet collected → shown on the Crew tab.
+    expect(await screen.findByText('The Loading Dock')).toBeOnTheScreen();
   });
 });

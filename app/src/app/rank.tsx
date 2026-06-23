@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { insertIndex, nextComparisonIndex, scoreForInsert } from '@/domain/rankInsert';
-import { sortByScoreDesc } from '@/domain/ranking';
+import { insertIndex, nextComparisonIndex } from '@/domain/rankInsert';
+import { scoreFromRank } from '@/domain/ranking';
 import { haptics } from '@/lib/haptics';
 import { useSpotsStore } from '@/store/spotsStore';
 import { colors, font, hardShadow, inkBorder, pressedStyle, radii } from '@/theme/tokens';
@@ -26,23 +26,21 @@ export default function RankScreen() {
   const spot = [...mine, ...local, ...saved].find((s) => s.id === spotId);
 
   // Compare against your already-ranked spots, excluding this one (so re-ranking works).
-  const ranked = sortByScoreDesc(mine.filter((s) => s.id !== spotId));
+  // `mine` is already in rank order, so no sort is needed.
+  const ranked = mine.filter((s) => s.id !== spotId);
   const compareIdx = nextComparisonIndex(ranked.length, answers);
   const done = compareIdx === -1;
   const finalIndex = insertIndex(ranked.length, answers);
-  const finalScore = scoreForInsert(
-    ranked.map((s) => s.score),
-    finalIndex,
-  );
+  const finalScore = scoreFromRank(finalIndex, ranked.length + 1);
 
   // Persist the result once the comparisons resolve.
   useEffect(() => {
     if (done && spot && !committed) {
-      rankSpot(spot, finalScore);
+      rankSpot(spot, finalIndex);
       haptics.success();
       setCommitted(true);
     }
-  }, [done, spot, committed, rankSpot, finalScore]);
+  }, [done, spot, committed, rankSpot, finalIndex]);
 
   const answer = (a: Answer) => {
     haptics.tick();

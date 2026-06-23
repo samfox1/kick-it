@@ -19,9 +19,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { findDuplicateCandidates } from '@/domain/dedupe';
 import { exploreCatalog } from '@/domain/exploreView';
+import { compressImage } from '@/lib/image';
+import { useProfileStore } from '@/store/profileStore';
 import type { AccessLevel } from '@/domain/models';
-import { insertIndex, nextComparisonIndex, scoreForInsert } from '@/domain/rankInsert';
+import { insertIndex, nextComparisonIndex } from '@/domain/rankInsert';
+import { scoreFromRank } from '@/domain/ranking';
 import { visibleMySpots } from '@/domain/spotsView';
+import { useHangsStore } from '@/store/hangsStore';
 import { useSpotsStore } from '@/store/spotsStore';
 import { colors, font, hardShadow, inkBorder, radii } from '@/theme/tokens';
 import { AccessSticker } from '@/ui/AccessSticker';
@@ -58,6 +62,9 @@ export default function AddScreen() {
   const router = useRouter();
   const { spotId } = useLocalSearchParams<{ spotId?: string }>();
   const { local, mine, loaded, load } = useSpotsStore();
+  const addSpot = useSpotsStore((s) => s.addSpot);
+  const logHang = useHangsStore((s) => s.logHang);
+  const me = useProfileStore((s) => s.member);
   useEffect(() => {
     if (!loaded) void load();
   }, [loaded, load]);
@@ -75,6 +82,8 @@ export default function AddScreen() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [hangTitle, setHangTitle] = useState('');
   const [hangNote, setHangNote] = useState('');
+  const [description, setDescription] = useState('');
+  const [firstHang, setFirstHang] = useState('');
   const [draftLoc, setDraftLoc] = useState<{ lat: number; lng: number } | null>(null);
 
   const lastStep = intendsHang ? 2 : 5;
@@ -105,16 +114,64 @@ export default function AddScreen() {
   const compareIdx = nextComparisonIndex(ranked.length, answers);
   const rankingDone = step === 5 && compareIdx === -1;
   const finalIndex = insertIndex(ranked.length, answers);
-  const finalScore = scoreForInsert(
-    ranked.map((s) => s.score),
-    finalIndex,
-  );
+  const finalScore = scoreFromRank(finalIndex, ranked.length + 1);
+
+  const postHang = async () => {
+    if (spotId) {
+      const res = await logHang({
+        spotId,
+        author: me,
+        title: hangTitle.trim() || 'Untitled hang',
+        note: hangNote.trim(),
+        image: photos[0] ?? '',
+        attendees: [],
+      });
+      if (!res.ok) return; // stay on screen so the write isn't silently lost
+    }
+    router.back();
+  };
+
+  const finishAddSpot = async () => {
+    const res = await addSpot(
+      {
+        name: name.trim() || 'New spot',
+        category: category.toLowerCase(),
+        access,
+        distanceMi: 0,
+        location: '',
+        image: photos[0] ?? '',
+        images: photos,
+        characteristicIds: Object.keys(tags).filter((id) => tags[id]),
+        description: description.trim() || undefined,
+        lat: draftLoc?.lat,
+        lng: draftLoc?.lng,
+      },
+      finalIndex,
+    );
+    if (!res.ok) return;
+    // Optionally log the first hang at the brand-new spot (no photo of its own yet).
+    if (firstHang.trim()) {
+      const hangRes = await logHang({
+        spotId: res.value.id,
+        author: me,
+        title: 'First hang',
+        note: firstHang.trim(),
+        image: '',
+        attendees: [],
+      });
+      if (!hangRes.ok) return; // spot saved; surface the hang failure instead of pretending success
+    }
+    router.back();
+  };
 
   const addFromCamera = async () => {
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) return;
     const res = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.7 });
-    if (!res.canceled) setPhotos((p) => [...p, res.assets[0].uri]);
+    if (res.canceled) return;
+    const a = res.assets[0];
+    const uri = await compressImage(a.uri, a.width);
+    setPhotos((p) => [...p, uri]);
   };
   const addFromLibrary = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -122,7 +179,9 @@ export default function AddScreen() {
       quality: 0.7,
       allowsMultipleSelection: true,
     });
-    if (!res.canceled) setPhotos((p) => [...p, ...res.assets.map((a) => a.uri)]);
+    if (res.canceled) return;
+    const uris = await Promise.all(res.assets.map((a) => compressImage(a.uri, a.width)));
+    setPhotos((p) => [...p, ...uris]);
   };
   const removePhoto = (uri: string) => setPhotos((p) => p.filter((x) => x !== uri));
 
@@ -237,7 +296,7 @@ export default function AddScreen() {
                 placeholder="Who came, what you got into, why it was worth it…"
                 placeholderTextColor={colors.muted2}
               />
-              <Pressable style={styles.postBtn} onPress={() => router.back()}>
+              <Pressable style={styles.postBtn} onPress={postHang}>
                 <Text style={styles.postText}>Post hang</Text>
               </Pressable>
             </>
@@ -362,6 +421,8 @@ export default function AddScreen() {
               <Text style={styles.label}>Describe the vibe</Text>
               <TextInput
                 style={[styles.field, styles.fieldArea]}
+                value={description}
+                onChangeText={setDescription}
                 multiline
                 placeholder="What makes this spot good?"
                 placeholderTextColor={colors.muted2}
@@ -369,6 +430,8 @@ export default function AddScreen() {
               <Text style={styles.label}>Log your first hang (optional)</Text>
               <TextInput
                 style={styles.field}
+                value={firstHang}
+                onChangeText={setFirstHang}
                 placeholder="One line about tonight…"
                 placeholderTextColor={colors.muted2}
               />
@@ -396,7 +459,7 @@ export default function AddScreen() {
               </PopIn>
               <Text style={styles.revealName}>{name || 'New spot'}</Text>
               <Text style={styles.revealSub}>Lands at #{finalIndex + 1} on your ranked list</Text>
-              <Pressable style={styles.doneBtn} onPress={() => router.back()}>
+              <Pressable style={styles.doneBtn} onPress={finishAddSpot}>
                 <Text style={styles.doneText}>Done</Text>
               </Pressable>
             </View>

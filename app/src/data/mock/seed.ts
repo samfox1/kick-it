@@ -2,7 +2,9 @@ import type { Spot } from '../../domain/models';
 import { MockSpotRepository, type SpotSeed } from '../MockSpotRepository';
 import type { SpotRepository } from '../SpotRepository';
 
-const img = (seed: string) => `https://picsum.photos/seed/${seed}/600/400`;
+/** Mock photo from Lorem Picsum (real Unsplash-licensed images — free for public/commercial
+ *  use). `id` picks a stable photo; `keywords` is just a label for what we're aiming at. */
+const photo = (keywords: string, id: number) => `https://picsum.photos/id/${id}/600/400`;
 
 /** Spots the current user has saved/ranked (their crew's map). */
 const mine: Spot[] = [
@@ -16,8 +18,13 @@ const mine: Spot[] = [
     location: 'Lake Mendota',
     lat: 43.1097,
     lng: -89.4206,
-    image: img('pontoon7'),
-    images: [img('pontoon7'), img('pontoon-deck'), img('pontoon-sunset'), img('pontoon-cooler')],
+    image: photo('lake,pontoon,boat', 101),
+    images: [
+      photo('lake,pontoon,boat', 101),
+      photo('lake,dock', 102),
+      photo('lake,sunset', 103),
+      photo('cooler,beer', 104),
+    ],
     description:
       "Rick's 24-footer. Pull out past the point, cut the engine, and the bay is yours. Bring a cooler — the fridge is small. Cell service drops near the island (feature, not a bug).",
     characteristicIds: [
@@ -42,8 +49,12 @@ const mine: Spot[] = [
     location: 'Near campus',
     lat: 43.0733,
     lng: -89.4009,
-    image: img('basement4'),
-    images: [img('basement4'), img('basement-couch'), img('basement-setup')],
+    image: photo('basement,game,room', 110),
+    images: [
+      photo('basement,game,room', 110),
+      photo('couch,living,room', 111),
+      photo('tv,console,gaming', 112),
+    ],
     characteristicIds: ['aux', 'charging', 'private', 'cannabis'],
   },
   {
@@ -56,8 +67,13 @@ const mine: Spot[] = [
     location: 'Eastside',
     lat: 43.0738,
     lng: -89.4015,
-    image: img('rooftop9'),
-    images: [img('rooftop9'), img('rooftop-skyline'), img('rooftop-lights'), img('rooftop-couch')],
+    image: photo('rooftop,city,terrace', 120),
+    images: [
+      photo('rooftop,city,terrace', 120),
+      photo('city,skyline', 121),
+      photo('rooftop,night,lights', 122),
+      photo('rooftop,lounge', 123),
+    ],
     characteristicIds: ['charging', 'cannabis', 'view', 'aux'],
   },
   {
@@ -70,7 +86,7 @@ const mine: Spot[] = [
     location: 'Northside',
     lat: 43.076,
     lng: -89.403,
-    image: img('firepit3'),
+    image: photo('firepit,backyard,bonfire', 130),
     characteristicIds: ['loud', 'biggroup', 'dog'],
   },
   {
@@ -83,7 +99,7 @@ const mine: Spot[] = [
     location: 'Downtown',
     lat: 43.0731,
     lng: -89.4002,
-    image: img('tinroof2'),
+    image: photo('bar,patio', 140),
     characteristicIds: ['food', 'aux', 'shaded', 'parking'],
   },
   {
@@ -96,7 +112,7 @@ const mine: Spot[] = [
     location: 'Cedar Park',
     lat: 43.0735,
     lng: -89.4012,
-    image: img('cedarbench8'),
+    image: photo('park,bench,trees', 150),
     characteristicIds: ['sunset', 'free', 'shaded'],
   },
 ];
@@ -113,7 +129,7 @@ const local: Spot[] = [
     location: 'Cedar Park',
     lat: 43.0735,
     lng: -89.4012,
-    image: img('cedarbench8'),
+    image: photo('park,bench,trees', 150),
     characteristicIds: ['sunset', 'free', 'shaded'],
   },
   {
@@ -126,8 +142,8 @@ const local: Spot[] = [
     location: 'Downtown',
     lat: 43.0731,
     lng: -89.4002,
-    image: img('tinroof2'),
-    images: [img('tinroof2'), img('tinroof-bar'), img('tinroof-night')],
+    image: photo('bar,patio', 140),
+    images: [photo('bar,patio', 140), photo('bar,counter', 141), photo('bar,night', 142)],
     characteristicIds: ['food', 'aux', 'shaded', 'parking'],
   },
   {
@@ -140,7 +156,7 @@ const local: Spot[] = [
     location: 'Warehouse district',
     lat: 43.0728,
     lng: -89.402,
-    image: img('dock5'),
+    image: photo('warehouse,loft', 160),
     characteristicIds: ['loud', 'openlate', 'biggroup'],
   },
   {
@@ -153,8 +169,8 @@ const local: Spot[] = [
     location: 'Riverfront',
     lat: 43.0745,
     lng: -89.4012,
-    image: img('riverwalk1'),
-    images: [img('riverwalk1'), img('riverwalk-steps'), img('riverwalk-dusk')],
+    image: photo('river,waterfront', 170),
+    images: [photo('river,waterfront', 170), photo('river,steps', 171), photo('river,dusk', 172)],
     characteristicIds: ['water', 'free', 'sunset'],
   },
 ];

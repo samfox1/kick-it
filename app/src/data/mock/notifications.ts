@@ -11,6 +11,8 @@ export interface AppNotification {
   id: string;
   kind: NotificationKind;
   actorInitial: string;
+  /** Actor's profile photo; falls back to the initial when absent. */
+  actorAvatar?: string;
   text: string;
   when: string;
   /** Spot to open when tapped, if relevant. */
@@ -18,11 +20,16 @@ export interface AppNotification {
   unread: boolean;
 }
 
+const face = (n: number) =>
+  `https://api.dicebear.com/9.x/notionists/png?seed=kickit-${n}` +
+  `&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
+
 export const NOTIFICATIONS: AppNotification[] = [
   {
     id: 'n1',
     kind: 'new_spot',
     actorInitial: 'M',
+    actorAvatar: face(13),
     text: 'Marcus added a new spot near you — Marcus’s Rooftop',
     when: '2h ago',
     spotId: 'rooftop',
@@ -32,6 +39,7 @@ export const NOTIFICATIONS: AppNotification[] = [
     id: 'n2',
     kind: 'like',
     actorInitial: 'S',
+    actorAvatar: face(5),
     text: 'Sara and 4 others liked your hang “Golden hour burgers”',
     when: '5h ago',
     spotId: 'pontoon',
@@ -41,6 +49,7 @@ export const NOTIFICATIONS: AppNotification[] = [
     id: 'n3',
     kind: 'endorse',
     actorInitial: 'D',
+    actorAvatar: face(33),
     text: 'Dev vouched for “Aux access” at Joey’s Basement',
     when: 'Yesterday',
     spotId: 'basement',
@@ -50,6 +59,7 @@ export const NOTIFICATIONS: AppNotification[] = [
     id: 'n4',
     kind: 'hang',
     actorInitial: 'N',
+    actorAvatar: face(45),
     text: 'Nia logged a hang at a spot you ranked — Nia’s Firepit',
     when: 'Yesterday',
     spotId: 'firepit',
@@ -59,6 +69,7 @@ export const NOTIFICATIONS: AppNotification[] = [
     id: 'n5',
     kind: 'rank',
     actorInitial: 'J',
+    actorAvatar: face(53),
     text: 'Joey ranked Uncle Rick’s Pontoon #1 on their list',
     when: '2d ago',
     spotId: 'pontoon',
@@ -68,6 +79,7 @@ export const NOTIFICATIONS: AppNotification[] = [
     id: 'n6',
     kind: 'crew',
     actorInitial: 'T',
+    actorAvatar: face(47),
     text: 'Tess joined your crew',
     when: '3d ago',
     unread: false,

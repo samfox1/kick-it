@@ -5,8 +5,10 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { scoreForReorder } from '@/domain/rankInsert';
 import type { Spot } from '@/domain/models';
+import { usingSupabase } from '@/data/repositories';
+import { withDistances } from '@/domain/distance';
+import { useLocationPermission } from '@/lib/useLocation';
 import { visibleLocalSpots, visibleMySpots } from '@/domain/spotsView';
 import { haptics } from '@/lib/haptics';
 import { useHideOnScroll } from '@/lib/useHideOnScroll';
@@ -15,6 +17,8 @@ import { colors, font, hardShadow, inkBorder, radii } from '@/theme/tokens';
 import { PreferencesPanel } from '@/ui/PreferencesPanel';
 import { Segmented } from '@/ui/Segmented';
 import { SpotRow } from '@/ui/SpotRow';
+import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
 import { SpotsMap } from '@/ui/SpotsMap';
 import bench from '../../../assets/images/bench.png';
 
@@ -25,15 +29,18 @@ export default function SpotsScreen() {
     collection,
     local,
     mine,
+    saved,
     preferences,
     loaded,
+    error,
     load,
     setCollection,
     setMaxDistance,
     toggleNonNegotiable,
-    rankSpot,
+    reorderMine,
   } = useSpotsStore();
   const router = useRouter();
+  const { coords } = useLocationPermission();
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [view, setView] = useState<'list' | 'map'>('list');
@@ -54,8 +61,14 @@ export default function SpotsScreen() {
     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.ink} />
   );
 
+  // Discovery (Local) hides spots already saved or ranked, so every one is savable.
+  const ownedIds = [...mine, ...saved].map((s) => s.id);
+  // Supabase spots arrive with distanceMi=0; compute from the user's location (mock keeps seed).
+  const localWithDist = usingSupabase && coords ? withDistances(local, coords) : local;
   const spots =
-    collection === 'local' ? visibleLocalSpots(local, preferences) : visibleMySpots(mine);
+    collection === 'local'
+      ? visibleLocalSpots(localWithDist, preferences, ownedIds)
+      : visibleMySpots(mine);
   const count =
     collection === 'local' ? `${spots.length} spots near you` : `${spots.length} spots in your map`;
   const prefLabel =
@@ -128,6 +141,20 @@ export default function SpotsScreen() {
     </>
   );
 
+  const emptyOrError = !loaded ? null : error ? (
+    <ErrorState message={error} onRetry={() => void load()} />
+  ) : (
+    <EmptyState
+      source={bench}
+      title={collection === 'mine' ? 'No ranked spots yet' : 'No spots near you'}
+      subtitle={
+        collection === 'mine'
+          ? 'Rank a spot from Explore to start your list.'
+          : 'Adjust your filters, or add a new spot.'
+      }
+    />
+  );
+
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
       {view === 'map' ? (
@@ -145,17 +172,12 @@ export default function SpotsScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={refreshControl}
           ListHeaderComponent={<View>{header}</View>}
+          ListEmptyComponent={emptyOrError}
           activationDistance={14}
           onDragEnd={({ data, from, to }) => {
             if (from === to) return;
             haptics.bump();
-            rankSpot(
-              data[to],
-              scoreForReorder(
-                data.map((s) => s.score),
-                to,
-              ),
-            );
+            reorderMine(data);
           }}
           renderItem={({ item, drag, isActive, getIndex }) => (
             <ScaleDecorator>
@@ -177,9 +199,9 @@ export default function SpotsScreen() {
           refreshControl={refreshControl}
         >
           {header}
-          {spots.map((spot) => (
-            <SpotRow key={spot.id} spot={spot} />
-          ))}
+          {spots.length === 0
+            ? emptyOrError
+            : spots.map((spot) => <SpotRow key={spot.id} spot={spot} />)}
         </ScrollView>
       )}
     </SafeAreaView>

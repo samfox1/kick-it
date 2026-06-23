@@ -12,11 +12,20 @@ describe('visibleLocalSpots', () => {
     const result = visibleLocalSpots(spots, { maxDistanceMi: 5, nonNegotiables: ['aux'] });
     expect(result.map((s) => s.id)).toEqual(['near-hi', 'near-lo']);
   });
+
+  it('excludes spots already in your collection (owned)', () => {
+    const spots = [
+      makeSpot({ id: 'a', distanceMi: 1, characteristicIds: [] }),
+      makeSpot({ id: 'b', distanceMi: 1, characteristicIds: [] }),
+    ];
+    const result = visibleLocalSpots(spots, { maxDistanceMi: 5, nonNegotiables: [] }, ['a']);
+    expect(result.map((s) => s.id)).toEqual(['b']);
+  });
 });
 
 describe('visibleMySpots', () => {
-  it('orders by score descending', () => {
+  it('returns spots in their existing rank order (array order is the ranking)', () => {
     const spots = [makeSpot({ id: 'a', score: 7 }), makeSpot({ id: 'b', score: 9 })];
-    expect(visibleMySpots(spots).map((s) => s.id)).toEqual(['b', 'a']);
+    expect(visibleMySpots(spots).map((s) => s.id)).toEqual(['a', 'b']);
   });
 });

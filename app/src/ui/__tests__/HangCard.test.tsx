@@ -1,6 +1,9 @@
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 
 import { makeHang } from '@/test-utils/factories';
+import { useCrewStore } from '@/store/crewStore';
+import { useHangsStore } from '@/store/hangsStore';
+import { useProfileStore } from '@/store/profileStore';
 import { HangCard } from '../HangCard';
 
 jest.mock('expo-image', () => ({ Image: 'Image' }));
@@ -13,6 +16,15 @@ function reactionCount(label: string): number {
 }
 
 describe('HangCard reactions', () => {
+  beforeEach(() => {
+    useHangsStore.setState({ reactions: {} });
+    useCrewStore.setState({ invited: [] });
+    useProfileStore.setState({
+      member: { id: 'sam', name: 'Sam Fox', initial: 'S' },
+      handle: '@samkicks',
+    });
+  });
+
   it('shows the heart count from hang.likes and toggles it by one', () => {
     render(<HangCard hang={makeHang({ likes: 3 })} />);
     expect(reactionCount('React heart')).toBe(3);
@@ -39,6 +51,45 @@ describe('HangCard reactions', () => {
     expect(reactionCount('React haha')).toBe(first);
   });
 
+  it('persists a reaction across unmount (state lives in the store)', () => {
+    const hang = makeHang({ id: 'persist-me', likes: 2 });
+    const { unmount } = render(<HangCard hang={hang} />);
+    fireEvent.press(screen.getByLabelText('React heart'));
+    expect(reactionCount('React heart')).toBe(3);
+    unmount();
+
+    render(<HangCard hang={hang} />);
+    expect(reactionCount('React heart')).toBe(3); // still on after remount
+  });
+
+  it('shows your live profile name on your own hangs (a rename updates them)', () => {
+    useProfileStore.setState({
+      member: { id: 'sam', name: 'Renamed Sam', initial: 'R' },
+      handle: '@samkicks',
+    });
+    render(<HangCard hang={makeHang({ author: { id: 'sam', name: 'Old Name', initial: 'O' } })} />);
+    expect(screen.getByText('Renamed Sam')).toBeOnTheScreen();
+    expect(screen.queryByText('Old Name')).not.toBeOnTheScreen();
+  });
+
+  it("leaves other people's hang author names alone", () => {
+    render(
+      <HangCard hang={makeHang({ author: { id: 'marcus', name: 'Marcus', initial: 'M' } })} />,
+    );
+    expect(screen.getByText('Marcus')).toBeOnTheScreen();
+  });
+
+  it('collapses the avatar stack to "+N" past the visible cap', () => {
+    const attendees = Array.from({ length: 7 }, (_, i) => ({
+      id: `p${i}`,
+      name: `P${i}`,
+      initial: 'P',
+    }));
+    render(<HangCard hang={makeHang({ attendees, extraAttendees: 0 })} />);
+    // 5 faces shown + a "+2" overflow badge (7 people − 5 faces).
+    expect(screen.getByText('+2')).toBeOnTheScreen();
+  });
+
   it('shows an @spot link and fires onPressSpot when tapped', () => {
     const onPressSpot = jest.fn();
     render(
@@ -51,6 +102,19 @@ describe('HangCard reactions', () => {
   it('omits the @spot line when no spotName is given', () => {
     render(<HangCard hang={makeHang()} />);
     expect(screen.queryByLabelText(/^At /)).not.toBeOnTheScreen();
+  });
+
+  it('opens the attendees modal, offers Invite for a non-crew attendee, and records it', () => {
+    const hang = makeHang({
+      attendees: [{ id: 'tess', name: 'Tess', initial: 'T' }], // not in the seeded crew
+    });
+    render(<HangCard hang={hang} />);
+    fireEvent.press(screen.getByLabelText('See who was there'));
+    expect(screen.getByText('Who was there')).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByLabelText('Invite Tess'));
+    expect(useCrewStore.getState().invited).toContain('tess');
+    expect(screen.getByText('Invited')).toBeOnTheScreen();
   });
 
   it('shows edit/delete controls only when handlers are provided', () => {

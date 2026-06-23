@@ -35,12 +35,24 @@ export interface Spot {
    *  (a backend returns it in the payload); absent on locally-built spots. */
   vouchCounts?: Record<string, number>;
   description?: string;
+  /** The user who created the spot. Server-owned; used to show creator-only actions. */
+  creatorId?: string;
 }
+
+/** Input to create a spot. `id` and `score` (derived from rank), `vouchCounts`
+ *  (attached by the repo), and `creatorId` (server-set) are not caller-supplied. */
+export type NewSpot = Omit<Spot, 'id' | 'score' | 'vouchCounts' | 'creatorId'>;
 
 /** A spot's photos as a gallery: the explicit `images`, else just the cover. */
 export function spotGallery(spot: Pick<Spot, 'image' | 'images'>): string[] {
   return spot.images && spot.images.length > 0 ? spot.images : [spot.image];
 }
+
+/** A reaction a crew member can leave on a hang. */
+export type ReactionKey = 'heart' | 'fire' | 'haha';
+
+/** Input to create a hang. `id`, `when`, `likes`, `extraAttendees` are server-owned. */
+export type NewHang = Omit<Hang, 'id' | 'when' | 'likes' | 'extraAttendees'>;
 
 /** A single logged hangout at a spot (builds a spot's Hang Ledger). */
 export interface Hang {
@@ -68,8 +80,11 @@ export interface Preferences {
 export interface Member {
   id: string;
   name: string;
-  /** Initial shown in the avatar. */
+  /** Initial shown in the avatar when there's no photo. */
   initial: string;
+  /** Optional profile photo — a URL string or a bundled image (require/import).
+   *  Falls back to the colored initial when absent. */
+  avatar?: string | number;
 }
 
 interface FeedBase {

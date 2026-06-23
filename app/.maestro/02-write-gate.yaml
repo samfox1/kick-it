@@ -1,0 +1,14 @@
+# A signed-out guest is blocked from contributing: tapping a write action prompts sign-in.
+# Requires the Supabase backend (EXPO_PUBLIC_USE_SUPABASE=true) AND being signed out.
+# (In mock mode the gate is a pass-through and this flow won't see the prompt.)
+appId: ${MAESTRO_APP_ID}
+---
+- launchApp
+- tapOn: 'Explore'
+- tapOn: 'Open this spot' # top deck card (a11y label)
+- assertVisible: 'Rank this spot'
+- tapOn: 'Rank this spot'
+- assertVisible: 'Create an account' # the require-account prompt
+- takeScreenshot: 02-gate-prompt
+- tapOn: 'Not now'
+- assertVisible: 'Rank this spot' # dismissed, still on the spot (didn't navigate to /rank)

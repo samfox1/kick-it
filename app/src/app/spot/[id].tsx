@@ -1,13 +1,14 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Bookmark, ChevronLeft, ListOrdered, Plus, Waves } from 'lucide-react-native';
-import { useRef, useState } from 'react';
+import { Bookmark, ChevronLeft, ListOrdered, Plus, Trash2, Waves } from 'lucide-react-native';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CURRENT_USER } from '@/data/mock/profile';
+import { isMe } from '@/store/profileStore';
 import { spotGallery } from '@/domain/models';
 import { haptics } from '@/lib/haptics';
 import { useHangDelete } from '@/lib/useHangDelete';
+import { useRequireAccount } from '@/lib/useRequireAccount';
 import { useHangsStore } from '@/store/hangsStore';
 import { useSpotsStore } from '@/store/spotsStore';
 import { useSpotDetail } from '@/store/useSpotDetail';
@@ -39,9 +40,20 @@ export default function SpotDetailScreen() {
     local.find((s) => s.id === id) ??
     fetchedSpot;
   const allHangs = useHangsStore((s) => s.hangs);
+  const loadForSpot = useHangsStore((s) => s.loadForSpot);
+  const loadMyReactions = useHangsStore((s) => s.loadMyReactions);
   const hangs = allHangs.filter((h) => h.spotId === id);
+  useEffect(() => {
+    void loadForSpot(id);
+    void loadMyReactions();
+  }, [id, loadForSpot, loadMyReactions]);
   const { requestDelete, confirmProps } = useHangDelete();
-  const [endorsed, setEndorsed] = useState<Record<string, boolean>>({});
+  const endorsements = useSpotsStore((s) => s.endorsements);
+  const toggleEndorsement = useSpotsStore((s) => s.toggleEndorsement);
+  const requireAccount = useRequireAccount();
+  const deleteSpot = useSpotsStore((s) => s.deleteSpot);
+  const [confirmDeleteSpot, setConfirmDeleteSpot] = useState(false);
+  const [deleteErr, setDeleteErr] = useState<string | null>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
 
   if (loading) {
@@ -64,16 +76,17 @@ export default function SpotDetailScreen() {
     );
   }
 
-  const toggle = (cid: string) => setEndorsed((e) => ({ ...e, [cid]: !e[cid] }));
+  const myEndorsements = endorsements[spot.id];
   const isSaved = savedSpots.some((s) => s.id === spot.id);
   const isRanked = mine.some((s) => s.id === spot.id);
   const toggleSave = () => {
     if (isSaved) {
       unsaveSpot(spot.id);
-    } else {
-      saveSpot(spot);
-      haptics.bump();
+      return;
     }
+    if (!requireAccount('Sign in to save spots.')) return;
+    saveSpot(spot);
+    haptics.bump();
   };
 
   const heroParallax = {
@@ -117,24 +130,27 @@ export default function SpotDetailScreen() {
           >
             <ChevronLeft size={20} color={colors.ink} strokeWidth={2} />
           </Pressable>
-          <Pressable
-            style={({ pressed }) => [
-              styles.heroBtn,
-              { top: insets.top + 10, right: 16 },
-              isSaved && styles.heroBtnSaved,
-              pressed && pressedStyle,
-            ]}
-            onPress={toggleSave}
-            accessibilityRole="button"
-            accessibilityState={{ selected: isSaved }}
-          >
-            <Bookmark
-              size={20}
-              color={isSaved ? '#fff' : colors.ink}
-              fill={isSaved ? '#fff' : 'transparent'}
-              strokeWidth={2}
-            />
-          </Pressable>
+          {/* Saving only applies to spots not yet in your ranked list. */}
+          {!isRanked && (
+            <Pressable
+              style={({ pressed }) => [
+                styles.heroBtn,
+                { top: insets.top + 10, right: 16 },
+                isSaved && styles.heroBtnSaved,
+                pressed && pressedStyle,
+              ]}
+              onPress={toggleSave}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSaved }}
+            >
+              <Bookmark
+                size={20}
+                color={isSaved ? colors.paper : colors.ink}
+                fill={isSaved ? colors.paper : 'transparent'}
+                strokeWidth={2}
+              />
+            </Pressable>
+          )}
           <View style={styles.stickerOverlay}>
             <AccessSticker access={spot.access} />
           </View>
@@ -156,7 +172,10 @@ export default function SpotDetailScreen() {
 
           <Pressable
             style={({ pressed }) => [styles.rankBtn, pressed && pressedStyle]}
-            onPress={() => router.push({ pathname: '/rank', params: { spotId: spot.id } })}
+            onPress={() => {
+              if (requireAccount('Sign in to rank spots.'))
+                router.push({ pathname: '/rank', params: { spotId: spot.id } });
+            }}
           >
             <ListOrdered size={18} color={colors.ink} strokeWidth={2.2} />
             <Text style={styles.rankBtnText}>
@@ -168,14 +187,17 @@ export default function SpotDetailScreen() {
           <Text style={styles.sub}>Tap a badge to endorse what&apos;s true.</Text>
           <View style={styles.badges}>
             {spot.characteristicIds.map((cid) => {
-              const on = !!endorsed[cid];
+              const on = !!myEndorsements?.[cid];
               return (
                 <CategoryBadge
                   key={cid}
                   id={cid}
                   count={(spot.vouchCounts?.[cid] ?? 0) + (on ? 1 : 0)}
                   endorsed={on}
-                  onPress={() => toggle(cid)}
+                  onPress={() => {
+                    if (requireAccount('Sign in to vouch for a spot.'))
+                      toggleEndorsement(spot.id, cid);
+                  }}
                 />
               );
             })}
@@ -187,13 +209,16 @@ export default function SpotDetailScreen() {
           </View>
           <Pressable
             style={styles.logBtn}
-            onPress={() => router.push({ pathname: '/add', params: { spotId: spot.id } })}
+            onPress={() => {
+              if (requireAccount('Sign in to log a hang.'))
+                router.push({ pathname: '/add', params: { spotId: spot.id } });
+            }}
           >
             <Plus size={18} color="#fff" strokeWidth={2.4} />
             <Text style={styles.logBtnText}>Log a hang here</Text>
           </Pressable>
           {hangs.map((h) => {
-            const mineHang = h.author.id === CURRENT_USER.id;
+            const mineHang = isMe(h.author.id);
             return (
               <HangCard
                 key={h.id}
@@ -207,10 +232,38 @@ export default function SpotDetailScreen() {
               />
             );
           })}
+
+          {spot.creatorId && isMe(spot.creatorId) && (
+            <Pressable
+              style={({ pressed }) => [styles.deleteSpotBtn, pressed && pressedStyle]}
+              onPress={() => {
+                setDeleteErr(null);
+                setConfirmDeleteSpot(true);
+              }}
+            >
+              <Trash2 size={16} color={colors.like} strokeWidth={2.2} />
+              <Text style={styles.deleteSpotText}>Delete this spot</Text>
+            </Pressable>
+          )}
+          {deleteErr && <Text style={styles.deleteErr}>{deleteErr}</Text>}
         </View>
       </Animated.ScrollView>
 
       <ConfirmModal {...confirmProps} />
+      <ConfirmModal
+        visible={confirmDeleteSpot}
+        title="Delete this spot?"
+        message="This removes it from Kick It. You can only delete a spot you created that no one else has saved, ranked, or hung out at."
+        confirmLabel="Delete"
+        cancelLabel="Keep"
+        onCancel={() => setConfirmDeleteSpot(false)}
+        onConfirm={async () => {
+          setConfirmDeleteSpot(false);
+          const res = await deleteSpot(spot.id);
+          if (res.ok) router.back();
+          else setDeleteErr(res.error.message);
+        }}
+      />
     </View>
   );
 }
@@ -284,4 +337,23 @@ const styles = StyleSheet.create({
     ...hardShadow(4),
   },
   logBtnText: { fontFamily: font.extrabold, fontSize: 15, color: '#fff' },
+  deleteSpotBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    paddingVertical: 12,
+    borderRadius: radii.md,
+    marginTop: 24,
+    borderWidth: 2,
+    borderColor: colors.like,
+  },
+  deleteSpotText: { fontFamily: font.bold, fontSize: 14, color: colors.like },
+  deleteErr: {
+    fontFamily: font.semibold,
+    fontSize: 13,
+    color: colors.like,
+    textAlign: 'center',
+    marginTop: 10,
+  },
 });

@@ -1,0 +1,13 @@
+# Guest can browse without an account: feed -> explore -> open a spot -> see the ledger.
+appId: ${MAESTRO_APP_ID}
+---
+- launchApp
+- tapOn: 'Explore'
+- assertVisible: 'Public' # the public/crew toggle on Explore
+- takeScreenshot: 01-explore
+- tapOn: 'Open this spot' # top deck card (a11y label)
+- assertVisible: 'The Hang Ledger' # we landed on a spot detail
+- assertVisible: 'Rank this spot'
+- takeScreenshot: 01-spot-detail
+- back
+- assertVisible: 'Public' # back on Explore

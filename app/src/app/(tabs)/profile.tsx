@@ -4,9 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CURRENT_USER } from '@/data/mock/profile';
 import { SEED } from '@/data/mock/seed';
 import { useHangDelete } from '@/lib/useHangDelete';
+import { useProfileStore } from '@/store/profileStore';
 import { useHideOnScroll } from '@/lib/useHideOnScroll';
 import { useCrewStore } from '@/store/crewStore';
 import { useHangsStore } from '@/store/hangsStore';
@@ -23,6 +23,7 @@ import {
 import { Avatar, memberColor } from '@/ui/Avatar';
 import { ConfirmModal } from '@/ui/ConfirmModal';
 import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
 import { HangCard } from '@/ui/HangCard';
 import { Segmented } from '@/ui/Segmented';
 import { SpotRow } from '@/ui/SpotRow';
@@ -33,10 +34,13 @@ type Tab = 'saved' | 'hangs';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { saved, local, mine, loaded, load } = useSpotsStore();
+  const profile = useProfileStore();
+  const { saved, local, mine, loaded, error, load } = useSpotsStore();
   const members = useCrewStore((s) => s.members);
   const requests = useCrewStore((s) => s.requests);
-  const myHangs = useHangsStore((s) => s.hangs).filter((h) => h.author.id === CURRENT_USER.id);
+  const myHangs = useHangsStore((s) => s.hangs).filter((h) => h.author.id === profile.member.id);
+  const loadMineHangs = useHangsStore((s) => s.loadMine);
+  const loadMyReactions = useHangsStore((s) => s.loadMyReactions);
   const { requestDelete, confirmProps } = useHangDelete();
   const [tab, setTab] = useState<Tab>('saved');
   const onScroll = useHideOnScroll();
@@ -53,6 +57,11 @@ export default function ProfileScreen() {
     if (!loaded) void load();
   }, [loaded, load]);
 
+  useEffect(() => {
+    void loadMineHangs();
+    void loadMyReactions();
+  }, [loadMineHangs, loadMyReactions]);
+
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
       <ScrollView
@@ -62,10 +71,15 @@ export default function ProfileScreen() {
         scrollEventThrottle={16}
       >
         <View style={styles.profileRow}>
-          <Avatar label={CURRENT_USER.initial} color={accentRamp[0]} size={56} />
+          <Avatar
+            label={profile.member.initial}
+            color={accentRamp[0]}
+            size={56}
+            uri={profile.member.avatar}
+          />
           <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{CURRENT_USER.name}</Text>
-            <Text style={styles.handle}>{CURRENT_USER.handle}</Text>
+            <Text style={styles.name}>{profile.member.name}</Text>
+            <Text style={styles.handle}>{profile.handle}</Text>
           </View>
           <Pressable
             style={({ pressed }) => [styles.ico, pressed && pressedStyle]}
@@ -87,7 +101,7 @@ export default function ProfileScreen() {
           <Pressable style={styles.stack} onPress={() => router.push('/crew')}>
             {members.slice(0, 5).map((m, i) => (
               <View key={m.id} style={i === 0 ? undefined : styles.stacked}>
-                <Avatar label={m.initial} color={memberColor(m)} size={38} />
+                <Avatar label={m.initial} color={memberColor(m)} size={38} uri={m.avatar} />
               </View>
             ))}
           </Pressable>
@@ -114,7 +128,9 @@ export default function ProfileScreen() {
         </View>
 
         {tab === 'saved' &&
-          (saved.length === 0 ? (
+          (error ? (
+            <ErrorState message={error} onRetry={() => void load()} />
+          ) : saved.length === 0 ? (
             <EmptyState
               source={beanbag}
               title="No saved spots yet"

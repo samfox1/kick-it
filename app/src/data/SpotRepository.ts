@@ -1,4 +1,4 @@
-import type { Spot } from '../domain/models';
+import type { NewSpot, Spot } from '../domain/models';
 import type { Page, PageParams } from './page';
 import type { Result } from './result';
 
@@ -15,4 +15,16 @@ export interface SpotRepository {
   listMine(params?: PageParams): Promise<Result<Page<Spot>>>;
   /** A single spot by id; `value` is undefined when the spot genuinely doesn't exist. */
   getById(id: string): Promise<Result<Spot | undefined>>;
+  /** Create a new spot; the repo assigns id (and a placeholder score). Returns the record. */
+  createSpot(input: NewSpot): Promise<Result<Spot>>;
+  /** The current user's bookmarked spots. */
+  listSaved(params?: PageParams): Promise<Result<Page<Spot>>>;
+  /** Bookmark a spot for the current user (idempotent). */
+  saveSpot(spotId: string): Promise<Result<void>>;
+  /** Remove a bookmark for the current user. */
+  unsaveSpot(spotId: string): Promise<Result<void>>;
+  /** Replace the current user's ranked order with exactly `spotIds` (index = position). */
+  setRanking(spotIds: string[]): Promise<Result<void>>;
+  /** Delete a spot the current user created — only allowed if no one else has engaged. */
+  deleteSpot(spotId: string): Promise<Result<void>>;
 }

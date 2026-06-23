@@ -1,12 +1,17 @@
 import { create } from 'zustand';
 
-import { createDefaultSpotRepository } from '@/data/mock/seed';
+import { createSpotRepository } from '@/data/repositories';
 import type { SpotRepository } from '@/data/SpotRepository';
-import type { Preferences, Spot } from '@/domain/models';
-import { clampScore } from '@/domain/score';
+import type { Result } from '@/data/result';
+import { reportFailure } from '@/store/optimistic';
+import { rankingToFeedItem } from '@/domain/feedItem';
+import type { NewSpot, Preferences, Spot } from '@/domain/models';
+import { applyRankScores, sortByScoreDesc } from '@/domain/ranking';
+import { useFeedStore } from '@/store/feedStore';
+import { useProfileStore } from '@/store/profileStore';
 
 /** The single seam to data. Swap this for a backed repository later — store/screens unchanged. */
-const repo: SpotRepository = createDefaultSpotRepository();
+const repo: SpotRepository = createSpotRepository();
 
 export type Collection = 'local' | 'mine';
 
@@ -24,14 +29,26 @@ interface SpotsState {
   setCollection: (c: Collection) => void;
   setMaxDistance: (mi: number) => void;
   toggleNonNegotiable: (id: string) => void;
-  saveSpot: (spot: Spot) => void;
-  unsaveSpot: (id: string) => void;
+  saveSpot: (spot: Spot) => Promise<void>;
+  unsaveSpot: (id: string) => Promise<void>;
   isSaved: (id: string) => boolean;
   /**
-   * Add or update a spot in your ranked list ("mine") with a derived score.
-   * Ranking a spot promotes it out of "saved" — once it's ranked it lives in My spots.
+   * Place a spot at rank `index` in your ranked list ("mine"); 0 = top. Order is
+   * the source of truth — every spot's score is re-derived from its position.
+   * Ranking a spot promotes it out of "saved".
    */
-  rankSpot: (spot: Spot, score: number) => void;
+  rankSpot: (spot: Spot, index: number) => Promise<void>;
+  /** Reorder the ranked list to a new order (e.g. after drag) and re-derive scores. */
+  reorderMine: (ordered: Spot[]) => Promise<void>;
+  /** Create a brand-new spot (id from the repo), then rank it at `index`. */
+  addSpot: (draft: NewSpot, index: number) => Promise<Result<Spot>>;
+  /** Delete a spot you created (guarded server-side). Removes it from all collections on success. */
+  deleteSpot: (id: string) => Promise<Result<void>>;
+  /** The user's own characteristic endorsements, keyed by spot id then characteristic id. */
+  endorsements: Record<string, Record<string, boolean>>;
+  toggleEndorsement: (spotId: string, characteristicId: string) => void;
+  /** Clear all per-user collections (e.g. on an identity change). */
+  reset: () => void;
 }
 
 export const useSpotsStore = create<SpotsState>((set, get) => ({
@@ -42,18 +59,28 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
   preferences: { maxDistanceMi: 5, nonNegotiables: [] },
   loaded: false,
   error: null,
+  endorsements: {},
 
   load: async () => {
-    const [localRes, mineRes] = await Promise.all([repo.listLocal(), repo.listMine()]);
+    const [localRes, mineRes, savedRes] = await Promise.all([
+      repo.listLocal(),
+      repo.listMine(),
+      repo.listSaved(),
+    ]);
+    // On failure, clear collections too — never leave a previous identity's spots on screen.
     if (!localRes.ok) {
-      set({ loaded: true, error: localRes.error.message });
+      set({ local: [], mine: [], saved: [], loaded: true, error: localRes.error.message });
       return;
     }
     if (!mineRes.ok) {
-      set({ loaded: true, error: mineRes.error.message });
+      set({ local: [], mine: [], saved: [], loaded: true, error: mineRes.error.message });
       return;
     }
-    set({ local: localRes.value.items, mine: mineRes.value.items, loaded: true, error: null });
+    // Establish rank order from the seed's scores, then derive clean band scores so
+    // the order-as-truth model is consistent from the first render.
+    const mine = applyRankScores(sortByScoreDesc(mineRes.value.items));
+    const saved = savedRes.ok ? savedRes.value.items : [];
+    set({ local: localRes.value.items, mine, saved, loaded: true, error: null });
   },
 
   setCollection: (collection) => set({ collection }),
@@ -69,21 +96,77 @@ export const useSpotsStore = create<SpotsState>((set, get) => ({
       return { preferences: { ...s.preferences, nonNegotiables } };
     }),
 
-  saveSpot: (spot) =>
-    set((s) => {
-      // Invariant: a spot is in at most one of saved/mine. Already-ranked or
-      // already-saved spots are left alone (saved ∩ mine stays empty).
-      const exists = s.saved.some((m) => m.id === spot.id) || s.mine.some((m) => m.id === spot.id);
-      return exists ? s : { saved: [...s.saved, spot] };
-    }),
+  saveSpot: async (spot) => {
+    // Invariant: a spot is in at most one of saved/mine. Already-ranked or
+    // already-saved spots are left alone (saved ∩ mine stays empty).
+    const s = get();
+    const exists = s.saved.some((m) => m.id === spot.id) || s.mine.some((m) => m.id === spot.id);
+    if (exists) return;
+    const res = await repo.saveSpot(spot.id);
+    if (res.ok) set((st) => ({ saved: [...st.saved, spot] }));
+  },
 
-  unsaveSpot: (id) => set((s) => ({ saved: s.saved.filter((m) => m.id !== id) })),
+  unsaveSpot: async (id) => {
+    const res = await repo.unsaveSpot(id);
+    if (res.ok) set((s) => ({ saved: s.saved.filter((m) => m.id !== id) }));
+  },
 
   isSaved: (id) => get().saved.some((m) => m.id === id),
 
-  rankSpot: (spot, score) =>
-    set((s) => ({
-      mine: [...s.mine.filter((m) => m.id !== spot.id), { ...spot, score: clampScore(score) }],
-      saved: s.saved.filter((m) => m.id !== spot.id),
-    })),
+  rankSpot: async (spot, index) => {
+    const s = get();
+    const isFirstTime = !s.mine.some((m) => m.id === spot.id);
+    const wasSaved = s.saved.some((m) => m.id === spot.id);
+    const without = s.mine.filter((m) => m.id !== spot.id);
+    const clamped = Math.max(0, Math.min(without.length, index));
+    const mine = applyRankScores([...without.slice(0, clamped), spot, ...without.slice(clamped)]);
+    set({ mine, saved: s.saved.filter((m) => m.id !== spot.id) });
+    // Only a spot's first ranking is feed-worthy — re-ranks and drags stay quiet.
+    if (isFirstTime) {
+      const ranked = mine.find((m) => m.id === spot.id);
+      if (ranked)
+        useFeedStore
+          .getState()
+          .prepend(rankingToFeedItem(useProfileStore.getState().member, ranked, clamped + 1));
+    }
+    // Persist the new order; clear the bookmark if this spot was promoted out of saved.
+    reportFailure('rankSpot', await repo.setRanking(mine.map((m) => m.id)));
+    if (wasSaved) reportFailure('unsaveSpot', await repo.unsaveSpot(spot.id));
+  },
+
+  reorderMine: async (ordered) => {
+    const mine = applyRankScores(ordered);
+    set({ mine });
+    reportFailure('reorderMine', await repo.setRanking(mine.map((m) => m.id)));
+  },
+
+  addSpot: async (draft, index) => {
+    const res = await repo.createSpot(draft);
+    if (res.ok) await get().rankSpot(res.value, index);
+    return res;
+  },
+
+  deleteSpot: async (id) => {
+    const res = await repo.deleteSpot(id);
+    if (res.ok)
+      set((s) => ({
+        local: s.local.filter((x) => x.id !== id),
+        mine: s.mine.filter((x) => x.id !== id),
+        saved: s.saved.filter((x) => x.id !== id),
+      }));
+    return res;
+  },
+
+  toggleEndorsement: (spotId, characteristicId) =>
+    set((s) => {
+      const current = s.endorsements[spotId] ?? {};
+      return {
+        endorsements: {
+          ...s.endorsements,
+          [spotId]: { ...current, [characteristicId]: !current[characteristicId] },
+        },
+      };
+    }),
+
+  reset: () => set({ local: [], mine: [], saved: [], endorsements: {}, loaded: false }),
 }));

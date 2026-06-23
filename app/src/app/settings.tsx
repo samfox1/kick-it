@@ -1,22 +1,25 @@
 import { useRouter } from 'expo-router';
 import {
-  Bell,
   ChevronLeft,
   ChevronRight,
   CircleHelp,
-  Lock,
+  LogIn,
   LogOut,
+  Mail,
   MapPin,
   Share2,
-  Star,
   UserPen,
   Users,
 } from 'lucide-react-native';
 import { type ReactNode, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { usingSupabase } from '@/data/repositories';
+import { signOutToGuest } from '@/lib/authFlow';
 import { shareInvite } from '@/lib/invite';
+import { useLocationPermission } from '@/lib/useLocation';
+import { useProfileStore } from '@/store/profileStore';
 import { colors, font, hardShadow, inkBorder, radii } from '@/theme/tokens';
 
 function Row({
@@ -44,18 +47,33 @@ function Row({
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const [notifications, setNotifications] = useState(true);
-  const [location, setLocation] = useState(true);
-  const [privateProfile, setPrivateProfile] = useState(false);
+  const email = useProfileStore((s) => s.email);
+  const [signingOut, setSigningOut] = useState(false);
+  const { state: locationState, request: requestLocation } = useLocationPermission();
 
-  const toggle = (v: boolean, set: (b: boolean) => void) => (
-    <Switch
-      value={v}
-      onValueChange={set}
-      trackColor={{ true: colors.blue, false: '#d4d4d4' }}
-      thumbColor="#fff"
-    />
-  );
+  const onSignOut = async () => {
+    if (!usingSupabase) return router.replace('/');
+    setSigningOut(true);
+    await signOutToGuest();
+    setSigningOut(false);
+    router.back();
+  };
+
+  // Location is an OS permission: prompt if undecided, otherwise deep-link to OS settings
+  // (you can't toggle a granted/denied permission off from inside the app).
+  const onLocationPress = async () => {
+    if (locationState === 'granted' || locationState === 'denied') {
+      void Linking.openSettings();
+      return;
+    }
+    await requestLocation();
+  };
+  const locationLabel =
+    locationState === 'granted' ? 'On' : locationState === 'denied' ? 'Off' : '…';
+
+  const onHelp = () => {
+    void Linking.openURL('mailto:samuel.j.fox1@gmail.com?subject=Kick%20It%20feedback');
+  };
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
@@ -70,6 +88,22 @@ export default function SettingsScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.group}>Account</Text>
         <View style={styles.card}>
+          {usingSupabase &&
+            (email ? (
+              <>
+                <Row icon={<Mail size={18} color={colors.ink} strokeWidth={2} />} label={email} />
+                <View style={styles.divider} />
+              </>
+            ) : (
+              <>
+                <Row
+                  icon={<LogIn size={18} color={colors.ink} strokeWidth={2} />}
+                  label="Sign in or create account"
+                  onPress={() => router.push('/auth')}
+                />
+                <View style={styles.divider} />
+              </>
+            ))}
           <Row
             icon={<UserPen size={18} color={colors.ink} strokeWidth={2} />}
             label="Edit profile"
@@ -86,21 +120,15 @@ export default function SettingsScreen() {
         <Text style={styles.group}>Preferences</Text>
         <View style={styles.card}>
           <Row
-            icon={<Bell size={18} color={colors.ink} strokeWidth={2} />}
-            label="Push notifications"
-            right={toggle(notifications, setNotifications)}
-          />
-          <View style={styles.divider} />
-          <Row
             icon={<MapPin size={18} color={colors.ink} strokeWidth={2} />}
             label="Share my location"
-            right={toggle(location, setLocation)}
-          />
-          <View style={styles.divider} />
-          <Row
-            icon={<Lock size={18} color={colors.ink} strokeWidth={2} />}
-            label="Private profile"
-            right={toggle(privateProfile, setPrivateProfile)}
+            onPress={onLocationPress}
+            right={
+              <View style={styles.rowRight}>
+                <Text style={styles.statusText}>{locationLabel}</Text>
+                <ChevronRight size={18} color={colors.muted2} strokeWidth={2} />
+              </View>
+            }
           />
         </View>
 
@@ -113,22 +141,22 @@ export default function SettingsScreen() {
           />
           <View style={styles.divider} />
           <Row
-            icon={<Star size={18} color={colors.ink} strokeWidth={2} />}
-            label="Rate Kick It"
-            onPress={() => {}}
-          />
-          <View style={styles.divider} />
-          <Row
             icon={<CircleHelp size={18} color={colors.ink} strokeWidth={2} />}
             label="Help & feedback"
-            onPress={() => {}}
+            onPress={onHelp}
           />
         </View>
 
-        <Pressable style={styles.signOut} onPress={() => router.replace('/')}>
-          <LogOut size={18} color={colors.like} strokeWidth={2} />
-          <Text style={styles.signOutText}>Sign out</Text>
-        </Pressable>
+        {(!usingSupabase || email) && (
+          <Pressable
+            style={[styles.signOut, signingOut && { opacity: 0.6 }]}
+            onPress={onSignOut}
+            disabled={signingOut}
+          >
+            <LogOut size={18} color={colors.like} strokeWidth={2} />
+            <Text style={styles.signOutText}>{signingOut ? 'Signing out…' : 'Sign out'}</Text>
+          </Pressable>
+        )}
 
         <Text style={styles.version}>Kick It v1.0.0 · mock build</Text>
       </ScrollView>
@@ -183,6 +211,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, height: 54 },
   rowIcon: { width: 22, alignItems: 'center' },
   rowLabel: { fontFamily: font.bold, fontSize: 14.5, color: colors.ink },
+  rowRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  statusText: { fontFamily: font.bold, fontSize: 14, color: colors.muted },
   divider: { height: 1.5, backgroundColor: colors.soft, marginLeft: 48 },
   signOut: {
     flexDirection: 'row',

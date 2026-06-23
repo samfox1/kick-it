@@ -1,6 +1,8 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { ArrowRight } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, font, hardShadow, inkBorder } from '@/theme/tokens';
@@ -11,8 +13,26 @@ import barstool from '../../assets/images/barstool.png';
 import couch from '../../assets/images/couch_image.png';
 import wordmark from '../../assets/images/wordmark.png';
 
+const ONBOARDED_KEY = 'kickit.onboarded';
+
 export default function Landing() {
   const router = useRouter();
+  // Show the landing once; later launches go straight to the feed.
+  const [seen, setSeen] = useState<boolean | null>(null);
+  useEffect(() => {
+    AsyncStorage.getItem(ONBOARDED_KEY)
+      .then((v) => setSeen(v === '1'))
+      .catch(() => setSeen(false)); // storage read failed → show the landing rather than hang
+  }, []);
+
+  const enter = () => {
+    void AsyncStorage.setItem(ONBOARDED_KEY, '1');
+    router.replace('/feed');
+  };
+
+  if (seen === null) return <View style={styles.root} />; // brief blank while we check
+  if (seen) return <Redirect href="/feed" />;
+
   return (
     <View style={styles.root}>
       <FloatingDoodle
@@ -50,7 +70,7 @@ export default function Landing() {
       <View style={styles.hero}>
         <Text style={styles.eyebrow}>For people who like to…</Text>
         <Image source={wordmark} style={styles.wordmark} contentFit="contain" />
-        <Pressable style={styles.cta} onPress={() => router.replace('/feed')}>
+        <Pressable style={styles.cta} onPress={enter}>
           <Text style={styles.ctaText}>Open the app</Text>
           <ArrowRight size={16} color={colors.ink} strokeWidth={2.4} />
         </Pressable>

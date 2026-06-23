@@ -4,12 +4,18 @@ import type { LucideIcon } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import type { Hang } from '@/domain/models';
+import type { Hang, Member, ReactionKey } from '@/domain/models';
 import { haptics } from '@/lib/haptics';
+import { useRequireAccount } from '@/lib/useRequireAccount';
+import { useCrewStore } from '@/store/crewStore';
+import { useHangsStore } from '@/store/hangsStore';
+import { useProfileStore } from '@/store/profileStore';
 import { colors, font, inkBorder, pressedStyle, radii } from '@/theme/tokens';
+import { AttendeesModal, type AttendeeRow } from '@/ui/AttendeesModal';
 import { Avatar, memberColor } from '@/ui/Avatar';
 
-type ReactionKey = 'heart' | 'fire' | 'haha';
+/** Max avatars shown on the card before collapsing to "+N"; the modal lists everyone. */
+const MAX_FACES = 5;
 
 const REACTIONS: { key: ReactionKey; Icon: LucideIcon; color: string; fillWhenOn: boolean }[] = [
   { key: 'heart', Icon: Heart, color: colors.like, fillWhenOn: true },
@@ -44,25 +50,48 @@ export function HangCard({
   onEdit?: () => void;
   onDelete?: () => void;
 }) {
-  const [active, setActive] = useState<Record<ReactionKey, boolean>>({
-    heart: false,
-    fire: false,
-    haha: false,
+  const active = useHangsStore((s) => s.reactions[hang.id]);
+  const toggleReaction = useHangsStore((s) => s.toggleReaction);
+  const requireAccount = useRequireAccount();
+  const isOn = (key: ReactionKey) => active?.[key] ?? false;
+
+  const toggle = (key: ReactionKey) => {
+    if (!requireAccount('Sign in to react to hangs.')) return;
+    if (!isOn(key)) haptics.bump();
+    toggleReaction(hang.id, key);
+  };
+
+  // Show your live profile identity on your own hangs, so a rename updates them.
+  const me = useProfileStore((s) => s.member);
+  const author = hang.author.id === me.id ? me : hang.author;
+  const crew = useCrewStore((s) => s.members);
+  const invitedIds = useCrewStore((s) => s.invited);
+  const sendInvite = useCrewStore((s) => s.invite);
+  const [showPeople, setShowPeople] = useState(false);
+  const peopleCount = hang.attendees.length + hang.extraAttendees;
+  const hasPeople = peopleCount > 0;
+
+  const attendeeRows: AttendeeRow[] = hang.attendees.map((m) => {
+    let status: AttendeeRow['status'];
+    if (m.id === me.id) status = 'you';
+    else if (crew.some((c) => c.id === m.id)) status = 'friend';
+    else if (invitedIds.includes(m.id)) status = 'invited';
+    else status = 'invitable';
+    return { member: m, status };
   });
 
-  const toggle = (key: ReactionKey) =>
-    setActive((prev) => {
-      if (!prev[key]) haptics.bump();
-      return { ...prev, [key]: !prev[key] };
-    });
+  const invite = (m: Member) => {
+    haptics.bump();
+    sendInvite(m);
+  };
 
   return (
     <View style={styles.card}>
       <View style={styles.posterRow}>
-        <Avatar label={hang.author.initial} color={memberColor(hang.author)} size={40} />
+        <Avatar label={author.initial} color={memberColor(author)} size={40} uri={author.avatar} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={styles.poster} numberOfLines={1}>
-            {hang.author.name}
+            {author.name}
           </Text>
           <Text style={styles.when}>{hang.when}</Text>
         </View>
@@ -111,22 +140,33 @@ export function HangCard({
       />
 
       <View style={styles.foot}>
-        <View style={styles.stack}>
-          {hang.attendees.map((m, i) => (
+        <Pressable
+          style={({ pressed }) => [styles.stack, pressed && hasPeople && pressedStyle]}
+          onPress={() => setShowPeople(true)}
+          disabled={!hasPeople}
+          hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel="See who was there"
+        >
+          {hang.attendees.slice(0, MAX_FACES).map((m, i) => (
             <View key={m.id} style={i === 0 ? undefined : styles.stacked}>
-              <Avatar label={m.initial} color={memberColor(m)} size={34} />
+              <Avatar label={m.initial} color={memberColor(m)} size={34} uri={m.avatar} />
             </View>
           ))}
-          {hang.extraAttendees > 0 && (
+          {peopleCount - Math.min(hang.attendees.length, MAX_FACES) > 0 && (
             <View style={styles.stacked}>
-              <Avatar label={`+${hang.extraAttendees}`} color="#555" size={34} />
+              <Avatar
+                label={`+${peopleCount - Math.min(hang.attendees.length, MAX_FACES)}`}
+                color={colors.slate}
+                size={34}
+              />
             </View>
           )}
-        </View>
+        </Pressable>
         <View style={{ flex: 1 }} />
         <View style={styles.reactions}>
           {REACTIONS.map(({ key, Icon, color, fillWhenOn }) => {
-            const on = active[key];
+            const on = isOn(key);
             const base = key === 'heart' ? hang.likes : baseCount(hang.id, key);
             const count = base + (on ? 1 : 0);
             return (
@@ -151,6 +191,14 @@ export function HangCard({
           })}
         </View>
       </View>
+
+      <AttendeesModal
+        visible={showPeople}
+        rows={attendeeRows}
+        extraCount={hang.extraAttendees}
+        onInvite={invite}
+        onClose={() => setShowPeople(false)}
+      />
     </View>
   );
 }

@@ -1,0 +1,16 @@
+# The sign-in/sign-up modal opens from Settings and renders the email step.
+# Stops before "Send code" on purpose — pressing it sends a real OTP email (rate-limited),
+# so completing the code step is a manual test. Requires Supabase mode + signed out.
+appId: ${MAESTRO_APP_ID}
+---
+- launchApp
+- tapOn: 'Profile'
+- takeScreenshot: 03-profile
+- tapOn: 'Settings'
+- tapOn: 'Sign in or create account'
+- assertVisible: "What's your email?" # the modal's email step
+- takeScreenshot: 03-signin-modal
+- tapOn: 'you@email.com' # focus the email field (by placeholder)
+- inputText: 'you@example.com'
+- assertVisible: 'Send code' # ready to request a code (not pressed — avoids a real email)
+- takeScreenshot: 03-signin-filled

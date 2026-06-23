@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import SpotDetailScreen from '../[id]';
+import { useSpotsStore } from '@/store/spotsStore';
 
 jest.mock('expo-image', () => ({ Image: 'Image' }));
 jest.mock('expo-router', () => ({
@@ -25,5 +26,22 @@ describe('Spot detail screen', () => {
     expect(screen.getByText('What people vouch for')).toBeOnTheScreen();
     expect(screen.getByText('On the water')).toBeOnTheScreen();
     expect(screen.getByText('Golden hour burgers')).toBeOnTheScreen();
+  });
+
+  it('persists a vouch endorsement when you tap a characteristic badge', async () => {
+    useSpotsStore.setState({ endorsements: {} });
+    render(
+      <SafeAreaProvider initialMetrics={metrics}>
+        <SpotDetailScreen />
+      </SafeAreaProvider>,
+    );
+    const badge = await screen.findByText('On the water');
+    const endorsedNow = () =>
+      Object.values(useSpotsStore.getState().endorsements.pontoon ?? {}).some(Boolean);
+
+    fireEvent.press(badge);
+    expect(endorsedNow()).toBe(true);
+    fireEvent.press(badge);
+    expect(endorsedNow()).toBe(false);
   });
 });

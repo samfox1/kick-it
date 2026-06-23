@@ -4,6 +4,7 @@ import { Bookmark, Heart, Users } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { FeedItem, Member } from '@/domain/models';
+import { useProfileStore } from '@/store/profileStore';
 import { colors, font, hardShadow, inkBorder, pressedStyle, radii } from '@/theme/tokens';
 import { AccessSticker } from '@/ui/AccessSticker';
 import { Avatar, memberColor } from '@/ui/Avatar';
@@ -13,7 +14,7 @@ import { ScoreBubble } from '@/ui/ScoreBubble';
 function Poster({ by, line, when }: { by: Member; line: string; when: string }) {
   return (
     <View style={styles.poster}>
-      <Avatar label={by.initial} color={memberColor(by)} size={38} />
+      <Avatar label={by.initial} color={memberColor(by)} size={38} uri={by.avatar} />
       <View style={{ flex: 1 }}>
         <Text style={styles.posterLine}>{line}</Text>
         <Text style={styles.when}>{when}</Text>
@@ -25,13 +26,17 @@ function Poster({ by, line, when }: { by: Member; line: string; when: string }) 
 /** Renders one activity-feed entry (new spot / hang / re-rank). The whole card opens the spot. */
 export function FeedCard({ item }: { item: FeedItem }) {
   const router = useRouter();
+  const me = useProfileStore((s) => s.member);
   const openSpot = () => router.push({ pathname: '/spot/[id]', params: { id: item.spotId } });
+  // The feed payload is a frozen snapshot; show your live identity on your own items so a
+  // rename reflects immediately (mirrors HangCard).
+  const by = item.by.id === me.id ? me : item.by;
 
   if (item.kind === 'new_spot') {
     return (
       <Pressable style={({ pressed }) => [styles.card, pressed && pressedStyle]} onPress={openSpot}>
         <View style={styles.posterRow}>
-          <Poster by={item.by} line={`${item.by.name} added a new spot`} when={item.when} />
+          <Poster by={by} line={`${by.name} added a new spot`} when={item.when} />
           <AccessSticker access={item.access} />
         </View>
         <View style={styles.imageWrap}>
@@ -77,11 +82,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
     return (
       <Pressable style={({ pressed }) => [styles.card, pressed && pressedStyle]} onPress={openSpot}>
         <View style={styles.posterRow}>
-          <Poster
-            by={item.by}
-            line={`${item.by.name} logged a hang at ${item.spotName}`}
-            when={item.when}
-          />
+          <Poster by={by} line={`${by.name} logged a hang at ${item.spotName}`} when={item.when} />
           <AccessSticker access={item.access} />
         </View>
         <Image
@@ -96,7 +97,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
             <View style={styles.stack}>
               {item.attendees.map((m, i) => (
                 <View key={m.id} style={i === 0 ? undefined : styles.stacked}>
-                  <Avatar label={m.initial} color={memberColor(m)} size={26} />
+                  <Avatar label={m.initial} color={memberColor(m)} size={26} uri={m.avatar} />
                 </View>
               ))}
               {item.extraAttendees > 0 && (
@@ -121,9 +122,9 @@ export function FeedCard({ item }: { item: FeedItem }) {
       onPress={openSpot}
     >
       <View style={styles.rankedTop}>
-        <Avatar label={item.by.initial} color={memberColor(item.by)} size={38} />
+        <Avatar label={by.initial} color={memberColor(by)} size={38} uri={by.avatar} />
         <View style={{ flex: 1 }}>
-          <Text style={styles.posterLine}>{item.by.name} ranked a spot</Text>
+          <Text style={styles.posterLine}>{by.name} ranked a spot</Text>
           <Text style={styles.when}>{item.when}</Text>
         </View>
         <ScoreBubble score={item.score} size="md" />

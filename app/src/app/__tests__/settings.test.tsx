@@ -34,7 +34,7 @@ describe('Settings screen', () => {
     renderScreen();
     expect(screen.getByText('Settings')).toBeOnTheScreen();
     expect(screen.getByText('Edit profile')).toBeOnTheScreen();
-    expect(screen.getByText('Push notifications')).toBeOnTheScreen();
+    expect(screen.getByText('Share my location')).toBeOnTheScreen();
     expect(screen.getByText('Invite friends')).toBeOnTheScreen();
     expect(screen.getByText('Sign out')).toBeOnTheScreen();
   });

@@ -1,17 +1,28 @@
 import type { Hang, Member } from '../../domain/models';
 import { MockHangRepository } from '../MockHangRepository';
 import type { HangRepository } from '../HangRepository';
+import { CREW, CREW_REQUESTS, CURRENT_MEMBER } from './profile';
 
-const img = (seed: string) => `https://picsum.photos/seed/${seed}/300/200`;
+const photo = (keywords: string, id: number) => `https://picsum.photos/id/${id}/600/400`;
+const face = (n: number) =>
+  `https://api.dicebear.com/9.x/notionists/png?seed=kickit-${n}` +
+  `&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
 
-const sara: Member = { id: 'sara', name: 'Sara', initial: 'S' };
-const marcus: Member = { id: 'marcus', name: 'Marcus', initial: 'M' };
-const dev: Member = { id: 'dev', name: 'Dev', initial: 'D' };
-const rick: Member = { id: 'rick', name: 'Rick', initial: 'R' };
-const tess: Member = { id: 'tess', name: 'Tess', initial: 'T' };
-const nia: Member = { id: 'nia', name: 'Nia', initial: 'N' };
-const joey: Member = { id: 'joey', name: 'Joey', initial: 'J' };
-const me: Member = { id: 'sam', name: 'Sam', initial: 'S' };
+// Reuse the avatar'd crew + requests so members look the same everywhere.
+const [marcus, sara, dev, nia, joey] = CREW;
+const [tess, rick] = CREW_REQUESTS;
+const me: Member = CURRENT_MEMBER;
+// A wider cast so attendee lists are fully named (no anonymous "+N"); several are
+// outside your crew, so the invite path is exercised.
+const leo: Member = { id: 'leo', name: 'Leo Park', initial: 'L', avatar: face(60) };
+const mia: Member = { id: 'mia', name: 'Mia Cole', initial: 'M', avatar: face(20) };
+const theo: Member = { id: 'theo', name: 'Theo Nash', initial: 'T' }; // no photo → initial
+const gabe: Member = { id: 'gabe', name: 'Gabe Ruiz', initial: 'G', avatar: face(8) };
+const omar: Member = { id: 'omar', name: 'Omar Diaz', initial: 'O', avatar: face(59) };
+const ivy: Member = { id: 'ivy', name: 'Ivy Chen', initial: 'I', avatar: face(24) };
+const cass: Member = { id: 'cass', name: 'Cass Webb', initial: 'C', avatar: face(31) };
+const pia: Member = { id: 'pia', name: 'Pia Romano', initial: 'P', avatar: face(48) };
+const ben: Member = { id: 'ben', name: 'Ben Hill', initial: 'B' }; // no photo → initial
 
 const HANGS: Hang[] = [
   {
@@ -20,10 +31,10 @@ const HANGS: Hang[] = [
     author: marcus,
     title: 'Golden hour burgers',
     note: 'Nine of us, Rick on the grill, Dev on aux. Best one yet.',
-    image: img('hang1'),
+    image: photo('lake,grill,bbq', 201),
     when: 'Jun 9',
-    attendees: [sara, marcus, dev],
-    extraAttendees: 6,
+    attendees: [sara, marcus, dev, rick, nia, joey, leo, mia, theo],
+    extraAttendees: 0,
     likes: 18,
   },
   {
@@ -32,7 +43,7 @@ const HANGS: Hang[] = [
     author: tess,
     title: "Tess's birthday float",
     note: 'Tied two boats together. Cake survived. Barely.',
-    image: img('hang2'),
+    image: photo('lake,boat,party', 202),
     when: 'May 24',
     attendees: [tess, rick, dev],
     extraAttendees: 0,
@@ -44,10 +55,10 @@ const HANGS: Hang[] = [
     author: joey,
     title: 'Smash tournament',
     note: 'Joey defended his title. Barely.',
-    image: img('hang3'),
+    image: photo('gaming,console', 203),
     when: 'May 2',
-    attendees: [marcus, dev],
-    extraAttendees: 3,
+    attendees: [marcus, dev, joey, leo, gabe],
+    extraAttendees: 0,
     likes: 12,
   },
   {
@@ -56,10 +67,10 @@ const HANGS: Hang[] = [
     author: marcus,
     title: 'Couch up the fire escape',
     note: 'Dragged the old couch up five flights. Worth every step for that skyline.',
-    image: img('hang4'),
+    image: photo('rooftop,city,couch', 204),
     when: 'Jun 12',
-    attendees: [marcus, sara, dev],
-    extraAttendees: 2,
+    attendees: [marcus, sara, dev, nia, omar],
+    extraAttendees: 0,
     likes: 21,
   },
   {
@@ -68,10 +79,10 @@ const HANGS: Hang[] = [
     author: sara,
     title: 'String lights & vinyl',
     note: 'Strung up lights, Sara brought the record player. Stayed til the trains stopped.',
-    image: img('hang5'),
+    image: photo('rooftop,lights,night', 205),
     when: 'May 30',
-    attendees: [marcus, nia],
-    extraAttendees: 4,
+    attendees: [marcus, nia, sara, joey, ivy, cass],
+    extraAttendees: 0,
     likes: 16,
   },
   {
@@ -80,10 +91,10 @@ const HANGS: Hang[] = [
     author: nia,
     title: "S'mores & a slackline",
     note: 'Nia rigged a slackline between the oaks. Nobody made it across sober.',
-    image: img('hang6'),
+    image: photo('campfire,smores', 206),
     when: 'Jun 7',
-    attendees: [nia, joey, dev],
-    extraAttendees: 3,
+    attendees: [nia, joey, dev, marcus, leo, pia],
+    extraAttendees: 0,
     likes: 14,
   },
   {
@@ -92,10 +103,10 @@ const HANGS: Hang[] = [
     author: sara,
     title: 'Trivia night patio',
     note: 'Took second place. The aux was ours all night.',
-    image: img('hang7'),
+    image: photo('bar,patio,night', 207),
     when: 'Jun 4',
-    attendees: [sara, joey],
-    extraAttendees: 5,
+    attendees: [sara, joey, dev, nia, ben, mia, theo],
+    extraAttendees: 0,
     likes: 9,
   },
   {
@@ -104,7 +115,7 @@ const HANGS: Hang[] = [
     author: dev,
     title: 'Sunset on the bench',
     note: 'Quiet one. Coffee, the oak, and the light going gold.',
-    image: img('hang8'),
+    image: photo('park,bench,sunset', 208),
     when: 'May 18',
     attendees: [dev, tess],
     extraAttendees: 0,
@@ -116,10 +127,10 @@ const HANGS: Hang[] = [
     author: me,
     title: 'Sundown swim off the back',
     note: 'Cut the engine past the point and jumped in. Water was perfect.',
-    image: img('hang9'),
+    image: photo('lake,swim', 209),
     when: 'Jun 11',
-    attendees: [me, sara, joey],
-    extraAttendees: 1,
+    attendees: [me, sara, joey, marcus],
+    extraAttendees: 0,
     likes: 11,
   },
   {
@@ -128,7 +139,7 @@ const HANGS: Hang[] = [
     author: me,
     title: 'Late-night skyline',
     note: 'Brought the speaker up, watched the city do its thing til 2am.',
-    image: img('hang10'),
+    image: photo('city,skyline,night', 210),
     when: 'May 28',
     attendees: [me, dev],
     extraAttendees: 0,

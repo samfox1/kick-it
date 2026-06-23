@@ -1,18 +1,37 @@
-import { Image, type ImageSource } from 'expo-image';
-import { Navigation } from 'lucide-react-native';
+import { type ImageSource } from 'expo-image';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
+import MapView, { Marker, type Region } from 'react-native-maps';
 
-import { mapPositions } from '@/domain/mapView';
 import type { Spot } from '@/domain/models';
-import { colors, font, hardShadow, inkBorder, radii } from '@/theme/tokens';
+import { colors, inkBorder, radii } from '@/theme/tokens';
 import { EmptyState } from '@/ui/EmptyState';
-import { ScoreBubble } from '@/ui/ScoreBubble';
+import { SpotsCallout } from '@/ui/SpotsCallout';
+
+// Full grayscale for Google Maps (Android). Apple Maps can't be custom-styled, so iOS uses
+// the built-in `mutedStandard` map type instead (desaturated, fits the ink look).
+const GRAYSCALE_STYLE = [{ stylers: [{ saturation: -100 }] }];
+
+/** A region that frames all the given coordinates, with a little padding. */
+function regionFor(coords: { lat: number; lng: number }[]): Region {
+  const lats = coords.map((c) => c.lat);
+  const lngs = coords.map((c) => c.lng);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+  return {
+    latitude: (minLat + maxLat) / 2,
+    longitude: (minLng + maxLng) / 2,
+    latitudeDelta: Math.max((maxLat - minLat) * 1.5, 0.02),
+    longitudeDelta: Math.max((maxLng - minLng) * 1.5, 0.02),
+  };
+}
 
 /**
- * A stylized neighborhood map: spots are pinned by their coordinates onto a paper grid.
- * Tap a pin to select it (shows a card); tap the card to open the spot. Not real map tiles —
- * those need a dev build; this reads the same `lat`/`lng` a real map would.
+ * Real map (Apple Maps on iOS, Google on Android) with a marker per located spot. Tap a marker
+ * to select it; the brand callout card slides in at the bottom; tap it to open the spot.
+ * Web uses SpotsMap.web.tsx (a stylized grid) since react-native-maps has no web support.
  */
 export function SpotsMap({
   spots,
@@ -23,13 +42,10 @@ export function SpotsMap({
   emptySource: ImageSource;
   onOpen: (spot: Spot) => void;
 }) {
-  const [size, setSize] = useState({ w: 0, h: 0 });
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const located = spots.filter((s) => s.lat != null && s.lng != null);
-  const positions = mapPositions(located.map((s) => ({ id: s.id, lat: s.lat!, lng: s.lng! })));
-  const byId = new Map(located.map((s) => [s.id, s]));
-  const selected = selectedId ? byId.get(selectedId) : undefined;
+  const selected = located.find((s) => s.id === selectedId);
 
   if (located.length === 0) {
     return (
@@ -42,73 +58,33 @@ export function SpotsMap({
   }
 
   return (
-    <View
-      style={styles.map}
-      onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
-    >
-      {/* Tapping empty map closes the selected spot's card. */}
-      <Pressable style={StyleSheet.absoluteFill} onPress={() => setSelectedId(null)} />
+    <View style={styles.wrap}>
+      <MapView
+        style={StyleSheet.absoluteFill}
+        initialRegion={regionFor(located.map((s) => ({ lat: s.lat!, lng: s.lng! })))}
+        mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
+        customMapStyle={Platform.OS === 'android' ? GRAYSCALE_STYLE : undefined}
+        showsUserLocation
+        showsMyLocationButton={false}
+        onPress={() => setSelectedId(null)}
+      >
+        {located.map((s) => (
+          <Marker
+            key={s.id}
+            coordinate={{ latitude: s.lat!, longitude: s.lng! }}
+            pinColor={colors.blue}
+            onPress={() => setSelectedId(s.id)}
+          />
+        ))}
+      </MapView>
 
-      {/* faint grid so it reads as a map */}
-      {[0.25, 0.5, 0.75].map((f) => (
-        <View key={`h${f}`} pointerEvents="none" style={[styles.gridH, { top: `${f * 100}%` }]} />
-      ))}
-      {[0.25, 0.5, 0.75].map((f) => (
-        <View key={`v${f}`} pointerEvents="none" style={[styles.gridV, { left: `${f * 100}%` }]} />
-      ))}
-
-      {/* you-are-here */}
-      <View style={styles.hereWrap} pointerEvents="none">
-        <View style={styles.here} />
-      </View>
-
-      {size.w > 0 &&
-        positions.map((p) => {
-          const spot = byId.get(p.id);
-          if (!spot) return null;
-          const on = p.id === selectedId;
-          return (
-            <Pressable
-              key={p.id}
-              style={[
-                styles.pin,
-                { left: p.nx * size.w - 21, top: p.ny * size.h - 21, zIndex: on ? 5 : 1 },
-              ]}
-              onPress={() => setSelectedId(on ? null : p.id)}
-            >
-              <Image
-                source={{ uri: spot.image }}
-                style={[styles.pinImg, on && styles.pinImgOn]}
-                contentFit="cover"
-                transition={120}
-              />
-            </Pressable>
-          );
-        })}
-
-      {selected && (
-        <Pressable style={styles.callout} onPress={() => onOpen(selected)}>
-          <Image source={{ uri: selected.image }} style={styles.calloutImg} contentFit="cover" />
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={styles.calloutName} numberOfLines={1}>
-              {selected.name}
-            </Text>
-            <View style={styles.calloutMetaRow}>
-              <Navigation size={12} color={colors.blue} strokeWidth={2.4} />
-              <Text style={styles.calloutMeta} numberOfLines={1}>
-                {selected.distanceMi} mi · {selected.category}
-              </Text>
-            </View>
-          </View>
-          <ScoreBubble score={selected.score} size="md" />
-        </Pressable>
-      )}
+      {selected && <SpotsCallout spot={selected} onOpen={onOpen} />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  map: {
+  wrap: {
     flex: 1,
     margin: 18,
     borderRadius: radii.xl,
@@ -116,43 +92,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.soft,
     ...inkBorder,
   },
-  gridH: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: '#e2e2dd' },
-  gridV: { position: 'absolute', top: 0, bottom: 0, width: 1, backgroundColor: '#e2e2dd' },
-  hereWrap: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    width: 18,
-    height: 18,
-    marginLeft: -9,
-    marginTop: -9,
-    borderRadius: 9,
-    backgroundColor: 'rgba(37,99,235,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  here: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.blue, ...inkBorder },
-  pin: { position: 'absolute' },
-  pinImg: { width: 42, height: 42, borderRadius: 21, ...inkBorder, ...hardShadow(2) },
-  pinImgOn: { borderColor: colors.blue, borderWidth: 3 },
-  callout: {
-    position: 'absolute',
-    left: 14,
-    right: 14,
-    bottom: 14,
-    zIndex: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 12,
-    borderRadius: radii.lg,
-    backgroundColor: colors.paper,
-    ...inkBorder,
-    ...hardShadow(4),
-    elevation: 20,
-  },
-  calloutImg: { width: 48, height: 48, borderRadius: 24, ...inkBorder },
-  calloutName: { fontFamily: font.extrabold, fontSize: 16, color: colors.ink },
-  calloutMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3 },
-  calloutMeta: { flex: 1, fontFamily: font.semibold, fontSize: 12, color: colors.muted },
 });

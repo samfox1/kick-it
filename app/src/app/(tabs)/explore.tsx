@@ -15,16 +15,20 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CHARACTERISTICS } from '@/domain/characteristics';
+import { usingSupabase } from '@/data/repositories';
+import { withDistances } from '@/domain/distance';
 import { crewSpots, exploreCatalog, nearbySpots } from '@/domain/exploreView';
 import type { Spot } from '@/domain/models';
 import { topEndorsed } from '@/domain/vouch';
 import { haptics } from '@/lib/haptics';
 import { useLocationPermission } from '@/lib/useLocation';
+import { useRequireAccount } from '@/lib/useRequireAccount';
 import { useSpotsStore } from '@/store/spotsStore';
 import { colors, font, hardShadow, inkBorder, pressedStyle, radii } from '@/theme/tokens';
 import { AccessSticker } from '@/ui/AccessSticker';
 import { CategoryBadge } from '@/ui/CategoryBadge';
 import { EmptyState } from '@/ui/EmptyState';
+import { ErrorState } from '@/ui/ErrorState';
 import { PreferencesPanel } from '@/ui/PreferencesPanel';
 import { ScoreBubble } from '@/ui/ScoreBubble';
 import bench from '../../../assets/images/bench.png';
@@ -41,6 +45,7 @@ function DeckCard({ spot, top, onOpen }: { spot: Spot; top: boolean; onOpen?: ()
       style={({ pressed }) => [styles.card, pressed && top && pressedStyle]}
       onPress={onOpen}
       disabled={!top}
+      accessibilityLabel={top ? 'Open this spot' : undefined}
     >
       <Image
         source={{ uri: spot.image }}
@@ -76,9 +81,19 @@ function DeckCard({ spot, top, onOpen }: { spot: Spot; top: boolean; onOpen?: ()
 
 export default function ExploreScreen() {
   const router = useRouter();
-  const { local, mine, loaded, load, preferences, setMaxDistance, toggleNonNegotiable } =
-    useSpotsStore();
-  const { state: locationState, request } = useLocationPermission();
+  const requireAccount = useRequireAccount();
+  const {
+    local,
+    mine,
+    saved,
+    loaded,
+    error,
+    load,
+    preferences,
+    setMaxDistance,
+    toggleNonNegotiable,
+  } = useSpotsStore();
+  const { state: locationState, request, coords } = useLocationPermission();
   const [tab, setTab] = useState<Tab>('public');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [index, setIndex] = useState(0);
@@ -101,7 +116,12 @@ export default function ExploreScreen() {
 
   const maxMi = preferences.maxDistanceMi;
   const nonNeg = preferences.nonNegotiables;
-  const catalog = exploreCatalog(local, mine);
+  // Discovery shows only spots you haven't collected yet, so swipe-to-save always saves.
+  const ownedIds = new Set([...mine, ...saved].map((s) => s.id));
+  let catalog = exploreCatalog(local, mine).filter((s) => !ownedIds.has(s.id));
+  // Supabase spots arrive with distanceMi=0; compute it from the user's location so the
+  // distance filter works. Mock mode keeps its curated seed distances.
+  if (usingSupabase && coords) catalog = withDistances(catalog, coords);
   const list = tab === 'public' ? nearbySpots(catalog, maxMi, nonNeg) : crewSpots(catalog, nonNeg);
 
   // Start the deck over whenever the tab or filters change the set of spots.
@@ -113,6 +133,15 @@ export default function ExploreScreen() {
   const forceSwipe = (dir: 'left' | 'right') => {
     // Swipe right (or the bookmark) saves the spot to your collection; left passes.
     if (dir === 'right' && topSpotRef.current) {
+      // Saving is a write — guests get prompted to sign in and the card snaps back.
+      if (!requireAccount('Sign in to save spots.')) {
+        Animated.spring(pan, {
+          toValue: { x: 0, y: 0 },
+          friction: 6,
+          useNativeDriver: false,
+        }).start();
+        return;
+      }
       useSpotsStore.getState().saveSpot(topSpotRef.current);
       haptics.success();
       flashSavedToast();
@@ -238,7 +267,9 @@ export default function ExploreScreen() {
 
         {locationState === 'granted' && (
           <View style={styles.deck}>
-            {visible.length === 0 ? (
+            {error ? (
+              <ErrorState message={error} onRetry={() => void load()} />
+            ) : visible.length === 0 ? (
               <EmptyState
                 source={bench}
                 title={
@@ -318,7 +349,8 @@ export default function ExploreScreen() {
                     accessibilityLabel="Log a hang here"
                     onPress={() => {
                       const t = topSpotRef.current;
-                      if (t) router.push({ pathname: '/add', params: { spotId: t.id } });
+                      if (t && requireAccount('Sign in to log a hang.'))
+                        router.push({ pathname: '/add', params: { spotId: t.id } });
                     }}
                   >
                     <Plus size={30} color="#fff" strokeWidth={2.6} />

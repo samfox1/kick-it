@@ -1,14 +1,18 @@
 import * as Location from 'expo-location';
 import { useCallback, useEffect, useState } from 'react';
 
+import type { Coord } from '@/domain/geo';
+
 export type LocationState = 'checking' | 'granted' | 'denied';
 
 /**
- * Tracks foreground location permission. Checks on mount; `request()` prompts the user.
- * Kick It uses location to show only spots within reach — see the Explore screen.
+ * Tracks foreground location permission and, once granted, the user's coordinates.
+ * `coords` is null until permission is granted and a fix is obtained. Kick It uses this to
+ * compute how far each spot is — see the Explore/Spots screens.
  */
 export function useLocationPermission() {
   const [state, setState] = useState<LocationState>('checking');
+  const [coords, setCoords] = useState<Coord | null>(null);
 
   const check = useCallback(async () => {
     const { status } = await Location.getForegroundPermissionsAsync();
@@ -24,5 +28,19 @@ export function useLocationPermission() {
     void check();
   }, [check]);
 
-  return { state, request };
+  // Fetch a position once permission is granted.
+  useEffect(() => {
+    if (state !== 'granted') return;
+    let active = true;
+    Location.getCurrentPositionAsync({})
+      .then((p) => {
+        if (active) setCoords({ lat: p.coords.latitude, lng: p.coords.longitude });
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [state]);
+
+  return { state, request, coords };
 }
