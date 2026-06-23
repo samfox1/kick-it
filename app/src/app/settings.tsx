@@ -8,7 +8,6 @@ import {
   Mail,
   MapPin,
   Share2,
-  Star,
   UserPen,
   Users,
 } from 'lucide-react-native';
@@ -71,6 +70,10 @@ export default function SettingsScreen() {
   };
   const locationLabel =
     locationState === 'granted' ? 'On' : locationState === 'denied' ? 'Off' : '…';
+
+  const onHelp = () => {
+    void Linking.openURL('mailto:samuel.j.fox1@gmail.com?subject=Kick%20It%20feedback');
+  };
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
@@ -138,15 +141,9 @@ export default function SettingsScreen() {
           />
           <View style={styles.divider} />
           <Row
-            icon={<Star size={18} color={colors.ink} strokeWidth={2} />}
-            label="Rate Kick It"
-            onPress={() => {}}
-          />
-          <View style={styles.divider} />
-          <Row
             icon={<CircleHelp size={18} color={colors.ink} strokeWidth={2} />}
             label="Help & feedback"
-            onPress={() => {}}
+            onPress={onHelp}
           />
         </View>
 
