@@ -1,4 +1,5 @@
 import type { Member } from '../../domain/models';
+import headshot from '../../../assets/images/headshot.png';
 
 /** Stable portrait avatars for mock users (pravatar serves the same face per index). */
 const face = (n: number) => `https://i.pravatar.cc/240?img=${n}`;
@@ -8,7 +9,7 @@ export const CURRENT_MEMBER: Member = {
   id: 'sam',
   name: 'Sam Fox',
   initial: 'S',
-  avatar: face(12),
+  avatar: headshot,
 };
 
 /** The single mock user (no auth yet) — the member plus profile-only fields. */
@@ -19,14 +20,14 @@ export const CREW: Member[] = [
   { id: 'marcus', name: 'Marcus Lee', initial: 'M', avatar: face(13) },
   { id: 'sara', name: 'Sara Quinn', initial: 'S', avatar: face(5) },
   { id: 'dev', name: 'Dev Patel', initial: 'D', avatar: face(33) },
-  { id: 'nia', name: 'Nia Brooks', initial: 'N', avatar: face(45) },
-  { id: 'joey', name: 'Joey Marsh', initial: 'J', avatar: face(53) },
+  { id: 'nia', name: 'Nia Brooks', initial: 'N' }, // no photo → colored initial
+  { id: 'joey', name: 'Joey Marsh', initial: 'J' }, // no photo → colored initial
 ];
 
 /** People who've asked to join your crew — you accept or deny each. */
 export const CREW_REQUESTS: Member[] = [
   { id: 'tess', name: 'Tess Romano', initial: 'T', avatar: face(47) },
-  { id: 'rick', name: 'Rick Alvarez', initial: 'R', avatar: face(15) },
+  { id: 'rick', name: 'Rick Alvarez', initial: 'R' }, // no photo → colored initial
   { id: 'priya', name: 'Priya Shah', initial: 'P', avatar: face(44) },
 ];
 

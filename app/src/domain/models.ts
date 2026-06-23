@@ -82,8 +82,9 @@ export interface Member {
   name: string;
   /** Initial shown in the avatar when there's no photo. */
   initial: string;
-  /** Optional profile photo URL; falls back to the colored initial when absent. */
-  avatar?: string;
+  /** Optional profile photo — a URL string or a bundled image (require/import).
+   *  Falls back to the colored initial when absent. */
+  avatar?: string | number;
 }
 
 interface FeedBase {

@@ -15,13 +15,13 @@ const me: Member = CURRENT_MEMBER;
 // outside your crew, so the invite path is exercised.
 const leo: Member = { id: 'leo', name: 'Leo Park', initial: 'L', avatar: face(60) };
 const mia: Member = { id: 'mia', name: 'Mia Cole', initial: 'M', avatar: face(20) };
-const theo: Member = { id: 'theo', name: 'Theo Nash', initial: 'T', avatar: face(11) };
+const theo: Member = { id: 'theo', name: 'Theo Nash', initial: 'T' }; // no photo → initial
 const gabe: Member = { id: 'gabe', name: 'Gabe Ruiz', initial: 'G', avatar: face(8) };
 const omar: Member = { id: 'omar', name: 'Omar Diaz', initial: 'O', avatar: face(59) };
 const ivy: Member = { id: 'ivy', name: 'Ivy Chen', initial: 'I', avatar: face(24) };
 const cass: Member = { id: 'cass', name: 'Cass Webb', initial: 'C', avatar: face(31) };
 const pia: Member = { id: 'pia', name: 'Pia Romano', initial: 'P', avatar: face(48) };
-const ben: Member = { id: 'ben', name: 'Ben Hill', initial: 'B', avatar: face(7) };
+const ben: Member = { id: 'ben', name: 'Ben Hill', initial: 'B' }; // no photo → initial
 
 const HANGS: Hang[] = [
   {

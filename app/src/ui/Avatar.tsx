@@ -19,13 +19,13 @@ export function Avatar({
   label: string;
   color: string;
   size?: number;
-  uri?: string;
+  uri?: string | number;
 }) {
   const shape = { width: size, height: size, borderRadius: size / 2 };
   if (uri) {
-    return (
-      <Image source={{ uri }} style={[styles.av, shape]} contentFit="cover" transition={120} />
-    );
+    // string = remote/asset URL; number = a bundled require()'d image.
+    const source = typeof uri === 'number' ? uri : { uri };
+    return <Image source={source} style={[styles.av, shape]} contentFit="cover" transition={120} />;
   }
   return (
     <View style={[styles.av, shape, { backgroundColor: color }]}>
